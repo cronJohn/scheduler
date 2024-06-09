@@ -29,4 +29,7 @@ db-setup:
 	@sqlite3 ./internal/database/db.db < ./internal/database/schema.sql
 	@sqlite3 ./internal/database/db.db < ./internal/database/setup.sql
 
+sqlc:
+	@sqlc generate
+
 .PHONY: clean build build-server build-cli run-serv run-cli db-clean db-setup
