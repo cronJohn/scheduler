@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"database/sql"
-	"fmt"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/rs/zerolog/log"
 
 	"github.com/cronJohn/scheduler/internal/database/sqlc"
+	_ "github.com/cronJohn/scheduler/pkg/logger"
 )
 
 var (
@@ -18,7 +19,7 @@ var (
 func init() {
 	db, err = sql.Open("sqlite3", "internal/database/db.db")
 	if err != nil {
-		panic(err)
+		log.Fatal().Msgf("Unable to open database: %v", err)
 	}
 }
 
@@ -29,11 +30,11 @@ func main() {
 
 	data, err := queries.ViewAll(ctx)
 	if err != nil {
-		fmt.Println("nothing found")
+		log.Fatal().Msgf("Unable to get data: %v", err)
 	}
 
 	for _, v := range data {
-		fmt.Println("id:", v.ID)
-		fmt.Println("name:", v.Name)
+		log.Info().Msgf("%+v", v.ID)
+		log.Info().Msgf("%+v", v.Name)
 	}
 }
