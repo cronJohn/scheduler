@@ -12,6 +12,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog/log"
 
+	"github.com/cronJohn/scheduler/cmd/server/routes"
 	_ "github.com/cronJohn/scheduler/pkg/logger"
 )
 
@@ -36,6 +37,13 @@ func init() {
 	}
 
 	servMux = http.NewServeMux()
+
+	servMux.Handle("POST /admin/schedule", routes.AdminSchedule{})
+	servMux.Handle("POST /users/subrequest", routes.SubRequest{})
+	servMux.Handle("GET /users/subsheet", routes.Subsheet{})
+	servMux.Handle("GET /users/{id}/schedule", routes.UserSchedules{})
+
+	servMux.Handle("GET /pager", routes.Pager{})
 
 	serv = &http.Server{
 		Addr:    os.Getenv("SS_ADDR"),
