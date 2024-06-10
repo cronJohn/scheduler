@@ -3,38 +3,65 @@ package main
 import (
 	"context"
 	"database/sql"
+	"net/http"
+	"os"
+	"os/signal"
+	"time"
 
+	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog/log"
 
-	"github.com/cronJohn/scheduler/internal/database/sqlc"
 	_ "github.com/cronJohn/scheduler/pkg/logger"
 )
 
 var (
-	db  *sql.DB
-	err error
+	db      *sql.DB
+	servMux *http.ServeMux
+	serv    *http.Server
+	c       chan os.Signal
 )
 
 func init() {
-	db, err = sql.Open("sqlite3", "internal/database/db.db")
+	var err error
+
+	err = godotenv.Load()
+	if err != nil {
+		log.Fatal().Msgf("Unable to load .env file: %v", err)
+	}
+
+	db, err = sql.Open("sqlite3", os.Getenv("SS_DB"))
 	if err != nil {
 		log.Fatal().Msgf("Unable to open database: %v", err)
 	}
+
+	servMux = http.NewServeMux()
+
+	serv = &http.Server{
+		Addr:    os.Getenv("SS_ADDR"),
+		Handler: servMux,
+	}
+
+	c = make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, os.Kill)
 }
 
 func main() {
-	ctx := context.Background()
+	go func() {
+		log.Info().Msg("Starting server...")
+		serv.ListenAndServe()
+	}()
 
-	queries := sqlc.New(db)
+	<-c
+	log.Info().Msg("Stopping server...")
 
-	data, err := queries.ViewAll(ctx)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	err := serv.Shutdown(ctx)
 	if err != nil {
-		log.Fatal().Msgf("Unable to get data: %v", err)
-	}
-
-	for _, v := range data {
-		log.Info().Msgf("%+v", v.ID)
-		log.Info().Msgf("%+v", v.Name)
+		log.Fatal().Msgf("Failed to stop server: %v", err)
+		os.Exit(1)
 	}
 }

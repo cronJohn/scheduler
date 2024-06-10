@@ -4,10 +4,10 @@ CLIENT_BIN=./cmd/client/main.go
 WIN_SUF=_amd64.exe _386.exe
 
 run-serv:
-	@go run $(SERVER_BIN)
+	@-go run $(SERVER_BIN)
 
 run-cli:
-	@go run $(CLIENT_BIN)
+	@-go run $(CLIENT_BIN)
 
 build: build-cli build-server
 

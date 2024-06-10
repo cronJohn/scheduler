@@ -1,3 +1,4 @@
 TODO.md
 internal/database/setup.sql
 internal/database/db.db
+.env
