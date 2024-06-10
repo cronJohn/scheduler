@@ -11,7 +11,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog/log"
 
-	httpserv "github.com/cronJohn/scheduler/api/http"
+	"github.com/cronJohn/scheduler/api/httpserv"
 	_ "github.com/cronJohn/scheduler/pkg/logger"
 )
 
