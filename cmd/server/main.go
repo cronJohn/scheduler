@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"database/sql"
-	"net/http"
 	"os"
 	"os/signal"
 	"time"
@@ -12,62 +11,46 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog/log"
 
-	"github.com/cronJohn/scheduler/cmd/server/routes"
+	httpserv "github.com/cronJohn/scheduler/api/http"
+	"github.com/cronJohn/scheduler/internal/database/sqlc"
 	_ "github.com/cronJohn/scheduler/pkg/logger"
 )
 
 var (
-	db      *sql.DB
-	servMux *http.ServeMux
-	serv    *http.Server
-	c       chan os.Signal
+	server *httpserv.Server
+	db     *sqlc.Queries
 )
 
 func init() {
-	var err error
-
-	err = godotenv.Load()
+	err := godotenv.Load()
 	if err != nil {
 		log.Fatal().Msgf("Unable to load .env file: %v", err)
 	}
 
-	db, err = sql.Open("sqlite3", os.Getenv("SS_DB"))
+	dbHandle, err := sql.Open("sqlite3", os.Getenv("SS_DB"))
 	if err != nil {
 		log.Fatal().Msgf("Unable to open database: %v", err)
 	}
+	db = sqlc.New(dbHandle)
 
-	servMux = http.NewServeMux()
-
-	servMux.Handle("POST /admin/schedule", routes.AdminSchedule{})
-	servMux.Handle("POST /users/subrequest", routes.SubRequest{})
-	servMux.Handle("GET /users/subsheet", routes.Subsheet{})
-	servMux.Handle("GET /users/{id}/schedule", routes.UserSchedules{})
-
-	servMux.Handle("GET /pager", routes.Pager{})
-
-	serv = &http.Server{
-		Addr:    os.Getenv("SS_ADDR"),
-		Handler: servMux,
-	}
-
-	c = make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	signal.Notify(c, os.Kill)
+	server = httpserv.NewServer()
 }
 
 func main() {
-	go func() {
-		log.Info().Msg("Starting server...")
-		serv.ListenAndServe()
-	}()
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, os.Kill)
+
+	log.Info().Msg("Starting server...")
+	go server.Start()
 
 	<-c
-	log.Info().Msg("Stopping server...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	err := serv.Shutdown(ctx)
+	log.Info().Msg("Stopping server...")
+	err := server.Stop(ctx)
 	if err != nil {
 		log.Fatal().Msgf("Failed to stop server: %v", err)
 		os.Exit(1)
