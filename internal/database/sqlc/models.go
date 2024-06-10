@@ -9,7 +9,7 @@ import (
 )
 
 type Employee struct {
-	ID     int64
+	ID     string
 	Name   string
 	RoleID sql.NullInt64
 }

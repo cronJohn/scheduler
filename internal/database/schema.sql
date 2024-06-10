@@ -1,5 +1,5 @@
 CREATE TABLE employees (
-    id INTEGER PRIMARY KEY,
+    id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     role_id INTEGER,
     FOREIGN KEY (role_id) REFERENCES roles(id)

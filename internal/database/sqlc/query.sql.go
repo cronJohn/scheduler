@@ -15,7 +15,7 @@ INSERT INTO employees (id, name, role_id) VALUES (?, ?, ?)
 `
 
 type SetEmployeeParams struct {
-	ID     int64
+	ID     string
 	Name   string
 	RoleID sql.NullInt64
 }
