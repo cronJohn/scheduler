@@ -15,9 +15,9 @@ INSERT INTO employees (id, name, role_id) VALUES (?, ?, ?)
 `
 
 type SetEmployeeParams struct {
-	ID     string
-	Name   string
-	RoleID sql.NullInt64
+	ID     string        `json:"id"`
+	Name   string        `json:"name"`
+	RoleID sql.NullInt64 `json:"role_id"`
 }
 
 func (q *Queries) SetEmployee(ctx context.Context, arg SetEmployeeParams) error {
@@ -39,10 +39,10 @@ INSERT INTO schedules (employee_id, day_of_week, clock_in, clock_out) VALUES (?,
 `
 
 type SetScheduleParams struct {
-	EmployeeID sql.NullInt64
-	DayOfWeek  sql.NullInt64
-	ClockIn    sql.NullString
-	ClockOut   sql.NullString
+	EmployeeID sql.NullInt64  `json:"employee_id"`
+	DayOfWeek  sql.NullInt64  `json:"day_of_week"`
+	ClockIn    sql.NullString `json:"clock_in"`
+	ClockOut   sql.NullString `json:"clock_out"`
 }
 
 func (q *Queries) SetSchedule(ctx context.Context, arg SetScheduleParams) error {

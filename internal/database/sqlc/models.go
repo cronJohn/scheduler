@@ -9,20 +9,20 @@ import (
 )
 
 type Employee struct {
-	ID     string
-	Name   string
-	RoleID sql.NullInt64
+	ID     string        `json:"id"`
+	Name   string        `json:"name"`
+	RoleID sql.NullInt64 `json:"role_id"`
 }
 
 type Role struct {
-	ID   int64
-	Name string
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
 }
 
 type Schedule struct {
-	ID         int64
-	EmployeeID sql.NullInt64
-	DayOfWeek  sql.NullInt64
-	ClockIn    sql.NullString
-	ClockOut   sql.NullString
+	ID         int64          `json:"id"`
+	EmployeeID sql.NullInt64  `json:"employee_id"`
+	DayOfWeek  sql.NullInt64  `json:"day_of_week"`
+	ClockIn    sql.NullString `json:"clock_in"`
+	ClockOut   sql.NullString `json:"clock_out"`
 }
