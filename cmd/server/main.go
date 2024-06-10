@@ -12,14 +12,10 @@ import (
 	"github.com/rs/zerolog/log"
 
 	httpserv "github.com/cronJohn/scheduler/api/http"
-	"github.com/cronJohn/scheduler/internal/database/sqlc"
 	_ "github.com/cronJohn/scheduler/pkg/logger"
 )
 
-var (
-	server *httpserv.Server
-	db     *sqlc.Queries
-)
+var server *httpserv.Server
 
 func init() {
 	err := godotenv.Load()
@@ -31,9 +27,8 @@ func init() {
 	if err != nil {
 		log.Fatal().Msgf("Unable to open database: %v", err)
 	}
-	db = sqlc.New(dbHandle)
 
-	server = httpserv.NewServer()
+	server = httpserv.NewServer(dbHandle)
 }
 
 func main() {
