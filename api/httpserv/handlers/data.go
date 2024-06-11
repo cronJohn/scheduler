@@ -12,11 +12,11 @@ import (
 	"github.com/cronJohn/scheduler/internal/database/sqlc"
 )
 
-func (s *Handler) GetUserSchedules(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetUserSchedules(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	schedules, err := s.db.GetUserSchedules(ctx, r.PathValue("id"))
+	schedules, err := h.db.GetUserSchedules(ctx, r.PathValue("id"))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Error().Msgf("Failed to get user schedules: %v", err)
@@ -40,7 +40,7 @@ func (s *Handler) GetUserSchedules(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-func (s *Handler) PostSchedule(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) PostSchedule(w http.ResponseWriter, r *http.Request) {
 	var schedules []sqlc.Schedule
 
 	decoder := json.NewDecoder(r.Body)
@@ -53,7 +53,7 @@ func (s *Handler) PostSchedule(w http.ResponseWriter, r *http.Request) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	err := s.db.ClearSchedules(ctx)
+	err := h.db.ClearSchedules(ctx)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Error().Msgf("Failed to clear schedules: %v", err)
@@ -61,7 +61,7 @@ func (s *Handler) PostSchedule(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, schedule := range schedules {
-		err := s.db.SetSchedule(ctx, sqlc.SetScheduleParams{
+		err := h.db.SetSchedule(ctx, sqlc.SetScheduleParams{
 			ID:         schedule.ID,
 			EmployeeID: schedule.EmployeeID,
 			DayOfWeek:  schedule.DayOfWeek,
@@ -78,12 +78,12 @@ func (s *Handler) PostSchedule(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (s *Handler) GetSubsheet(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetSubsheet(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "<h1>Getting subsheet...</h1>")
 }
 
-func (s *Handler) PostSubrequest(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) PostSubrequest(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "<h1>Posting subrequest...</h1>")
 }

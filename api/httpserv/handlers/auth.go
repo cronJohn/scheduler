@@ -6,7 +6,7 @@ import (
 	"github.com/cronJohn/scheduler/util"
 )
 
-func (s *Handler) Login(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 
