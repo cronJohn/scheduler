@@ -7,17 +7,59 @@ package sqlc
 
 import (
 	"context"
-	"database/sql"
 )
+
+const clearSchedules = `-- name: ClearSchedules :exec
+DELETE FROM schedules
+`
+
+func (q *Queries) ClearSchedules(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, clearSchedules)
+	return err
+}
+
+const getUserSchedules = `-- name: GetUserSchedules :many
+SELECT id, employee_id, day_of_week, clock_in, clock_out FROM schedules
+WHERE employee_id = ?
+`
+
+func (q *Queries) GetUserSchedules(ctx context.Context, employeeID string) ([]Schedule, error) {
+	rows, err := q.db.QueryContext(ctx, getUserSchedules, employeeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Schedule
+	for rows.Next() {
+		var i Schedule
+		if err := rows.Scan(
+			&i.ID,
+			&i.EmployeeID,
+			&i.DayOfWeek,
+			&i.ClockIn,
+			&i.ClockOut,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
 
 const setEmployee = `-- name: SetEmployee :exec
 INSERT INTO employees (id, name, role_id) VALUES (?, ?, ?)
 `
 
 type SetEmployeeParams struct {
-	ID     string        `json:"id"`
-	Name   string        `json:"name"`
-	RoleID sql.NullInt64 `json:"role_id"`
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	RoleID int64  `json:"role_id"`
 }
 
 func (q *Queries) SetEmployee(ctx context.Context, arg SetEmployeeParams) error {
@@ -35,18 +77,21 @@ func (q *Queries) SetRole(ctx context.Context, name string) error {
 }
 
 const setSchedule = `-- name: SetSchedule :exec
-INSERT INTO schedules (employee_id, day_of_week, clock_in, clock_out) VALUES (?, ?, ?, ?)
+INSERT INTO schedules (id, employee_id, day_of_week, clock_in, clock_out)
+VALUES (?, ?, ?, ?, ?)
 `
 
 type SetScheduleParams struct {
-	EmployeeID sql.NullInt64  `json:"employee_id"`
-	DayOfWeek  sql.NullInt64  `json:"day_of_week"`
-	ClockIn    sql.NullString `json:"clock_in"`
-	ClockOut   sql.NullString `json:"clock_out"`
+	ID         int64  `json:"id"`
+	EmployeeID string `json:"employee_id"`
+	DayOfWeek  int64  `json:"day_of_week"`
+	ClockIn    string `json:"clock_in"`
+	ClockOut   string `json:"clock_out"`
 }
 
 func (q *Queries) SetSchedule(ctx context.Context, arg SetScheduleParams) error {
 	_, err := q.db.ExecContext(ctx, setSchedule,
+		arg.ID,
 		arg.EmployeeID,
 		arg.DayOfWeek,
 		arg.ClockIn,
@@ -55,12 +100,12 @@ func (q *Queries) SetSchedule(ctx context.Context, arg SetScheduleParams) error 
 	return err
 }
 
-const viewAll = `-- name: ViewAll :many
+const viewAllEmployees = `-- name: ViewAllEmployees :many
 SELECT id, name, role_id FROM employees
 `
 
-func (q *Queries) ViewAll(ctx context.Context) ([]Employee, error) {
-	rows, err := q.db.QueryContext(ctx, viewAll)
+func (q *Queries) ViewAllEmployees(ctx context.Context) ([]Employee, error) {
+	rows, err := q.db.QueryContext(ctx, viewAllEmployees)
 	if err != nil {
 		return nil, err
 	}

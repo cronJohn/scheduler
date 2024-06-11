@@ -39,7 +39,7 @@ func (s *Server) Start() error {
 	s.mux.HandleFunc("GET /index", s.IndexPage)
 
 	// API/data handlers
-	s.mux.HandleFunc("GET /api/users/{id}/schedule", s.GetUserSchedule)
+	s.mux.HandleFunc("GET /api/users/{id}/schedule", s.GetUserSchedules)
 	s.mux.HandleFunc("GET /api/subsheet", s.GetSubsheet)
 	s.mux.HandleFunc("POST /api/subrequest", s.PostSubrequest)
 	s.mux.HandleFunc("POST /api/admin/schedule", s.PostSchedule)

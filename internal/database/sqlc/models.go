@@ -4,14 +4,10 @@
 
 package sqlc
 
-import (
-	"database/sql"
-)
-
 type Employee struct {
-	ID     string        `json:"id"`
-	Name   string        `json:"name"`
-	RoleID sql.NullInt64 `json:"role_id"`
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	RoleID int64  `json:"role_id"`
 }
 
 type Role struct {
@@ -20,9 +16,9 @@ type Role struct {
 }
 
 type Schedule struct {
-	ID         int64          `json:"id"`
-	EmployeeID sql.NullInt64  `json:"employee_id"`
-	DayOfWeek  sql.NullInt64  `json:"day_of_week"`
-	ClockIn    sql.NullString `json:"clock_in"`
-	ClockOut   sql.NullString `json:"clock_out"`
+	ID         int64  `json:"id"`
+	EmployeeID string `json:"employee_id"`
+	DayOfWeek  int64  `json:"day_of_week"`
+	ClockIn    string `json:"clock_in"`
+	ClockOut   string `json:"clock_out"`
 }

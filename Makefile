@@ -29,6 +29,8 @@ db-setup:
 	@sqlite3 ./internal/database/db.db < ./internal/database/schema.sql
 	@sqlite3 ./internal/database/db.db < ./internal/database/setup.sql
 
+db-reset: sqlc db-clean db-setup
+
 sqlc:
 	@sqlc generate
 
