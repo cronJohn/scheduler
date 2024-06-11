@@ -40,7 +40,7 @@ func (h *Handler) GetUserSchedules(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-func (h *Handler) PostSchedule(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) PostSchedules(w http.ResponseWriter, r *http.Request) {
 	var schedules []sqlc.Schedule
 
 	decoder := json.NewDecoder(r.Body)
