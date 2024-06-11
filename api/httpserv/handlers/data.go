@@ -1,4 +1,4 @@
-package httpserv
+package handlers
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	"github.com/cronJohn/scheduler/internal/database/sqlc"
 )
 
-func (s *Server) GetUserSchedules(w http.ResponseWriter, r *http.Request) {
+func (s *Handler) GetUserSchedules(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -40,7 +40,7 @@ func (s *Server) GetUserSchedules(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-func (s *Server) PostSchedule(w http.ResponseWriter, r *http.Request) {
+func (s *Handler) PostSchedule(w http.ResponseWriter, r *http.Request) {
 	var schedules []sqlc.Schedule
 
 	decoder := json.NewDecoder(r.Body)
@@ -78,12 +78,12 @@ func (s *Server) PostSchedule(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (s *Server) GetSubsheet(w http.ResponseWriter, r *http.Request) {
+func (s *Handler) GetSubsheet(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "<h1>Getting subsheet...</h1>")
 }
 
-func (s *Server) PostSubrequest(w http.ResponseWriter, r *http.Request) {
+func (s *Handler) PostSubrequest(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "<h1>Posting subrequest...</h1>")
 }
