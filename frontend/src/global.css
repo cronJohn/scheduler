@@ -4,6 +4,12 @@ body {
   min-height: 100vh;
 }
 
+button, input{
+    border: none;
+    text-align: center;
+    text-decoration: none;
+}
+
 a {
     text-decoration: none;
 }

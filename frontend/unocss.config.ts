@@ -14,9 +14,9 @@ export default defineConfig({
   ],
   rules: [
       ['nm', {
-      'border-radius': '30px',
+      'border-radius': '43px',
       'background': '#0E0E0E',
-      'box-shadow': '26px 26px 52px #060606, -26px -26px 52px #161616',
+      'box-shadow': '30px 30px 40px #060606, -30px -30px 40px #161616',
     }],
   ],
   theme: {
@@ -24,7 +24,7 @@ export default defineConfig({
         primary: '#D60026',
         light: '#FAF7FF',
         dark: '#0E0E0E',
-        offDark: '#242230',
+        offDark: '#1e1e1e',
     }
   }
 });
