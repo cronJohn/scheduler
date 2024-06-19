@@ -40,7 +40,7 @@ func (s *Server) Start() error {
 	handlers := handlers.NewHandler(dbHandle)
 
 	// Auth
-	s.mux.HandleFunc("POST /login", handlers.Login)
+	s.mux.HandleFunc("POST /login", middleware.CORS(handlers.Login))
 
 	// API/data handlers
 	s.mux.HandleFunc("GET /api/users/{id}/schedule", handlers.GetUserSchedules)
