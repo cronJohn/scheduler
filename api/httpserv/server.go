@@ -43,7 +43,7 @@ func (s *Server) Start() error {
 	s.mux.HandleFunc("POST /login", middleware.CORS(handlers.Login))
 
 	// API/data handlers
-	s.mux.HandleFunc("GET /api/users/{id}/schedule", handlers.GetUserSchedules)
+	s.mux.HandleFunc("GET /api/users/{id}/schedule", middleware.CORS(handlers.GetUserSchedules))
 	s.mux.HandleFunc("GET /api/subsheet", handlers.GetSubsheet)
 	s.mux.HandleFunc("POST /api/subrequest", handlers.PostSubrequest)
 	s.mux.HandleFunc("POST /api/admin/schedules", middleware.Auth(handlers.PostSchedules))
