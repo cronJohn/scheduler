@@ -16,7 +16,7 @@ export default defineConfig({
       ['nm', {
       'border-radius': '43px',
       'background': '#0E0E0E',
-      'box-shadow': '30px 30px 40px #060606, -30px -30px 40px #161616',
+      'box-shadow': '8px 8px 16px #060606, -8px -8px 16px #161616',
     }],
   ],
   theme: {

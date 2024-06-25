@@ -1,25 +1,19 @@
-import { For, Match, Show, Switch, createResource, createSignal, onMount, type Component } from 'solid-js';
+import { For, Match, Switch, createResource, createSignal, onMount, type Component } from 'solid-js';
+import { Spinner, SpinnerType } from 'solid-spinner';
+import Modal from 'solid-dialog';
 
 // convert day index to day name
-// integer to day
-function itd(dayIndex: number) {
+// itd: integer to day
+const itd = (dayIndex: number) => {
   return ["Sunday", "Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][dayIndex] || '';
 }
-
-// convert XX:XX to XX:XX AM/PM
-// military to regular
-function mtr(timeString: string) {
-    const [hours, minutes] = timeString.split(':');
-    const time = new Date(0, 0, 0, parseInt(hours), parseInt(minutes));
-    const formattedTime = time.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-    return formattedTime;
-};
 
 const fetchSchedules = async (id: string) => {
   const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/${id}/schedule`);
   return response.json();
 }
 
+let inputBuf: string = "";
 
 const Schedules: Component = () => {
     const [id, setId] = createSignal<string>();
@@ -28,7 +22,11 @@ const Schedules: Component = () => {
     const [inputEl, setInputEl] = createSignal<HTMLInputElement>();
 
     const findUser = () => {
+        if (inputEl()?.value === inputBuf) {
+            throw new Error('No change detected');
+        }
         setId(inputEl()?.value || '');
+        inputBuf = inputEl()?.value || '';
     }
 
     onMount(() => {
@@ -40,27 +38,40 @@ const Schedules: Component = () => {
     });
 
     return (
-        <div class="w-screen h-screen flex flex-col items-center justify-center">
-            <input ref={setInputEl} type="text" name="id" class='py-2 px-4 text-size-1.5rem rounded bg-offDark text-light' 
-            placeholder='Enter ID'/>
-            <button type="submit" class="bg-offDark text-primary font-semibold mt-4 py-3 px-5 text-size-1.5rem rounded hover:bg-opacity-75"
-            onClick={findUser}>Find</button>
+        <div>
+            <div class='nm flex flex-col w-30vw mx-auto mt-200px p-3rem flex-col items-center justify-center'>
+                <input ref={setInputEl} type="text" name="id" class='py-2 px-4 text-size-1.5rem rounded bg-offDark text-light' 
+                placeholder='Enter ID' onKeyPress={(e) => e.key === 'Enter' && findUser()}/>
+                <button type="submit" class="bg-offDark text-primary font-semibold mt-4 py-3 px-5 text-size-1.5rem rounded hover:bg-opacity-75"
+                onClick={findUser}>Find</button>
+            </div>
 
-            <Show when={fetchData.loading}>
-                <p>Loading...</p>
-            </Show>
             <Switch>
-                <Match when={fetchData.error}>
-                    <span>Error: {fetchData.error}</span>
+                <Match when={fetchData.loading}>
+                    <div class='flex align-center justify-center'>
+                        <Spinner type={SpinnerType.tailSpin} color="white" />
+                    </div>
                 </Match>
+
+                <Match when={fetchData.error}>
+                    <Modal isShown={fetchData.error} closeModal={() => {}}>
+                        <p class='font-code'>Invalid ID</p>
+                    </Modal>
+                </Match>
+
                 <Match when={id()}>
-                    <div class="nm w-30vw mt-8">
+                    <div class="nm w-30vw mx-auto my-12 pb-8 flex flex-col items-center font-code">
+                        <h1 class="text-3xl mt-8 text-center">Schedules for {id()}</h1>
                         <For each={fetchData.latest}>
-                            {(item) => (
-                            <div class="bg-offDark flex flex-col align-center m-8 p-4 rounded">
-                                <h2 class="text-xl font-code">{itd(item.day_of_week)}</h2>
-                                <p class="font-code">{mtr(item.clock_in)} - {mtr(item.clock_out)}</p>
-                            </div>
+                            {(schedule) => (
+                                <div class='bg-offDark w-80% py-2 px-4 mb-4 text-center rounded'>
+                                    <h2>{itd(schedule.day_of_week)}</h2>
+                                    <For each={schedule.times.split(',')}>
+                                        {(time) => (
+                                            <p>{time}</p>
+                                        )}
+                                    </For>
+                                </div>
                             )}
                         </For>
                     </div>
