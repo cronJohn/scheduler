@@ -19,26 +19,34 @@ func (q *Queries) ClearSchedules(ctx context.Context) error {
 }
 
 const getUserSchedules = `-- name: GetUserSchedules :many
-SELECT id, employee_id, day_of_week, clock_in, clock_out FROM schedules
-WHERE employee_id = ?
+SELECT
+    day_of_week,
+    GROUP_CONCAT(clock_in || ' - ' || clock_out, ',') AS times
+FROM
+    schedules
+WHERE
+    employee_id = ?
+GROUP BY
+    day_of_week
+ORDER BY
+    day_of_week
 `
 
-func (q *Queries) GetUserSchedules(ctx context.Context, employeeID string) ([]Schedule, error) {
+type GetUserSchedulesRow struct {
+	DayOfWeek int64  `json:"day_of_week"`
+	Times     string `json:"times"`
+}
+
+func (q *Queries) GetUserSchedules(ctx context.Context, employeeID string) ([]GetUserSchedulesRow, error) {
 	rows, err := q.db.QueryContext(ctx, getUserSchedules, employeeID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Schedule
+	var items []GetUserSchedulesRow
 	for rows.Next() {
-		var i Schedule
-		if err := rows.Scan(
-			&i.ID,
-			&i.EmployeeID,
-			&i.DayOfWeek,
-			&i.ClockIn,
-			&i.ClockOut,
-		); err != nil {
+		var i GetUserSchedulesRow
+		if err := rows.Scan(&i.DayOfWeek, &i.Times); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

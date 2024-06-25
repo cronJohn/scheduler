@@ -1,6 +1,15 @@
 -- name: GetUserSchedules :many
-SELECT * FROM schedules
-WHERE employee_id = ?;
+SELECT
+    day_of_week,
+    GROUP_CONCAT(clock_in || ' - ' || clock_out, ',') AS times
+FROM
+    schedules
+WHERE
+    employee_id = ?
+GROUP BY
+    day_of_week
+ORDER BY
+    day_of_week;
 
 -- name: ViewAllEmployees :many
 SELECT * FROM employees;
