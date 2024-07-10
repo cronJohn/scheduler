@@ -1,0 +1,8 @@
+root = "."
+
+[build]
+  cmd = "go run cmd/server/main.go"
+  exclude_dir = ["frontend"]
+
+[misc]
+clean_on_exit = true
