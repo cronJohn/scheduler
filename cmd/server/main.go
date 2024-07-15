@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -33,10 +34,9 @@ func init() {
 
 func main() {
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	signal.Notify(c, os.Kill)
+	signal.Notify(c, os.Interrupt, os.Kill, syscall.SIGTERM)
 
-	log.Info().Msg("Starting server...")
+	log.Info().Msgf("Starting server on %s...", os.Getenv("SS_HOST")+os.Getenv("SS_PORT"))
 	go server.Start()
 
 	<-c

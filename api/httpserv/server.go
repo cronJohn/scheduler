@@ -40,16 +40,16 @@ func (s *Server) Start() error {
 	handlers := handlers.NewHandler(dbHandle)
 
 	// Auth
-	s.mux.HandleFunc("POST /login", middleware.CORS(handlers.Login))
+	s.mux.HandleFunc("POST /login", handlers.Login)
 
 	// API/data handlers
-	s.mux.HandleFunc("GET /api/users/{id}/schedule", middleware.CORS(handlers.GetUserSchedules))
+	s.mux.HandleFunc("GET /api/users/{id}/schedule", handlers.GetUserSchedules)
 	s.mux.HandleFunc("GET /api/subsheet", handlers.GetSubsheet)
 	s.mux.HandleFunc("POST /api/subrequest", handlers.PostSubrequest)
 	s.mux.HandleFunc("POST /api/admin/schedules", middleware.Auth(handlers.PostSchedules))
 
 	// Page routing will be done using SolidJS's client-side router
-	s.mux.HandleFunc("GET /", handlers.IndexPage)
+	s.mux.Handle("GET /", middleware.LogH(http.FileServer(http.Dir("frontend/dist"))))
 
 	return s.server.ListenAndServe()
 }
