@@ -1,8 +1,12 @@
 root = "."
+tmp_dir = "tmp"
 
 [build]
-  cmd = "go run cmd/server/main.go"
-  exclude_dir = ["frontend"]
+  bin = "./tmp/sch"
+  cmd = "go build -o ./tmp/sch ./cmd/server/main.go"
+  exclude_dir = ["frontend/node_modules"]
+  send_interrupt = true
+  kill_delay = 1
 
 [misc]
-clean_on_exit = true
+  clean_on_exit = false
