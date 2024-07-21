@@ -9,44 +9,36 @@ import (
 	"context"
 )
 
-const clearSchedules = `-- name: ClearSchedules :exec
-DELETE FROM schedules
+const getSchedulesByUserID = `-- name: GetSchedulesByUserID :many
+SELECT id, week_start_date, day_of_week, clock_in, clock_out
+FROM schedules
+WHERE user_id = ?
 `
 
-func (q *Queries) ClearSchedules(ctx context.Context) error {
-	_, err := q.db.ExecContext(ctx, clearSchedules)
-	return err
+type GetSchedulesByUserIDRow struct {
+	ID            int64  `json:"id"`
+	WeekStartDate string `json:"week_start_date"`
+	DayOfWeek     int64  `json:"day_of_week"`
+	ClockIn       int64  `json:"clock_in"`
+	ClockOut      int64  `json:"clock_out"`
 }
 
-const getUserSchedules = `-- name: GetUserSchedules :many
-SELECT
-    day_of_week,
-    GROUP_CONCAT(clock_in || ' - ' || clock_out, ',') AS times
-FROM
-    schedules
-WHERE
-    employee_id = ?
-GROUP BY
-    day_of_week
-ORDER BY
-    day_of_week
-`
-
-type GetUserSchedulesRow struct {
-	DayOfWeek int64  `json:"day_of_week"`
-	Times     string `json:"times"`
-}
-
-func (q *Queries) GetUserSchedules(ctx context.Context, employeeID string) ([]GetUserSchedulesRow, error) {
-	rows, err := q.db.QueryContext(ctx, getUserSchedules, employeeID)
+func (q *Queries) GetSchedulesByUserID(ctx context.Context, userID string) ([]GetSchedulesByUserIDRow, error) {
+	rows, err := q.db.QueryContext(ctx, getSchedulesByUserID, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetUserSchedulesRow
+	var items []GetSchedulesByUserIDRow
 	for rows.Next() {
-		var i GetUserSchedulesRow
-		if err := rows.Scan(&i.DayOfWeek, &i.Times); err != nil {
+		var i GetSchedulesByUserIDRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.WeekStartDate,
+			&i.DayOfWeek,
+			&i.ClockIn,
+			&i.ClockOut,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -60,68 +52,21 @@ func (q *Queries) GetUserSchedules(ctx context.Context, employeeID string) ([]Ge
 	return items, nil
 }
 
-const setEmployee = `-- name: SetEmployee :exec
-INSERT INTO employees (id, name, role_id) VALUES (?, ?, ?)
+const getUsers = `-- name: GetUsers :many
+SELECT id, name, role
+FROM users
 `
 
-type SetEmployeeParams struct {
-	ID     string `json:"id"`
-	Name   string `json:"name"`
-	RoleID int64  `json:"role_id"`
-}
-
-func (q *Queries) SetEmployee(ctx context.Context, arg SetEmployeeParams) error {
-	_, err := q.db.ExecContext(ctx, setEmployee, arg.ID, arg.Name, arg.RoleID)
-	return err
-}
-
-const setRole = `-- name: SetRole :exec
-INSERT INTO roles (name) VALUES (?)
-`
-
-func (q *Queries) SetRole(ctx context.Context, name string) error {
-	_, err := q.db.ExecContext(ctx, setRole, name)
-	return err
-}
-
-const setSchedule = `-- name: SetSchedule :exec
-INSERT INTO schedules (id, employee_id, day_of_week, clock_in, clock_out)
-VALUES (?, ?, ?, ?, ?)
-`
-
-type SetScheduleParams struct {
-	ID         int64  `json:"id"`
-	EmployeeID string `json:"employee_id"`
-	DayOfWeek  int64  `json:"day_of_week"`
-	ClockIn    string `json:"clock_in"`
-	ClockOut   string `json:"clock_out"`
-}
-
-func (q *Queries) SetSchedule(ctx context.Context, arg SetScheduleParams) error {
-	_, err := q.db.ExecContext(ctx, setSchedule,
-		arg.ID,
-		arg.EmployeeID,
-		arg.DayOfWeek,
-		arg.ClockIn,
-		arg.ClockOut,
-	)
-	return err
-}
-
-const viewAllEmployees = `-- name: ViewAllEmployees :many
-SELECT id, name, role_id FROM employees
-`
-
-func (q *Queries) ViewAllEmployees(ctx context.Context) ([]Employee, error) {
-	rows, err := q.db.QueryContext(ctx, viewAllEmployees)
+func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
+	rows, err := q.db.QueryContext(ctx, getUsers)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Employee
+	var items []User
 	for rows.Next() {
-		var i Employee
-		if err := rows.Scan(&i.ID, &i.Name, &i.RoleID); err != nil {
+		var i User
+		if err := rows.Scan(&i.ID, &i.Name, &i.Role); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

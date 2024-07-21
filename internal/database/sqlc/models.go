@@ -4,21 +4,17 @@
 
 package sqlc
 
-type Employee struct {
-	ID     string `json:"id"`
-	Name   string `json:"name"`
-	RoleID int64  `json:"role_id"`
-}
-
-type Role struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
-}
-
 type Schedule struct {
-	ID         int64  `json:"id"`
-	EmployeeID string `json:"employee_id"`
-	DayOfWeek  int64  `json:"day_of_week"`
-	ClockIn    string `json:"clock_in"`
-	ClockOut   string `json:"clock_out"`
+	ID            int64  `json:"id"`
+	UserID        string `json:"user_id"`
+	WeekStartDate string `json:"week_start_date"`
+	DayOfWeek     int64  `json:"day_of_week"`
+	ClockIn       int64  `json:"clock_in"`
+	ClockOut      int64  `json:"clock_out"`
+}
+
+type User struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	Role string `json:"role"`
 }

@@ -3,23 +3,52 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/rs/zerolog/log"
-
-	"github.com/cronJohn/scheduler/internal/database/sqlc"
 )
 
-func (h *Handler) GetUserSchedules(w http.ResponseWriter, r *http.Request) {
+type (
+	DataMap      map[string]DayOfWeekMap
+	DayOfWeekMap map[int64][]ClockInOut
+	ClockInOut   struct {
+		ID       int64
+		ClockIn  int64
+		ClockOut int64
+	}
+)
+
+func (h *Handler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	schedules, err := h.db.GetUserSchedules(ctx, r.PathValue("id"))
+	users, err := h.db.GetUsers(ctx)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error().Msgf("Failed to get user schedules: %v", err)
+		log.Error().Msgf("Failed to get users: %v", err)
+		return
+	}
+
+	data, err := json.Marshal(users)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Error().Msgf("Failed to marshal users: %v", err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+}
+
+func (h *Handler) GetUserSchedule(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	schedules, err := h.db.GetSchedulesByUserID(ctx, r.PathValue("id"))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Error().Msgf("Failed to get schedules: %v", err)
 		return
 	}
 
@@ -29,61 +58,35 @@ func (h *Handler) GetUserSchedules(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := json.Marshal(schedules)
+	dataMap := make(DataMap)
+
+	// Populate the map
+	for _, sch := range schedules {
+		if _, exists := dataMap[sch.WeekStartDate]; !exists {
+			dataMap[sch.WeekStartDate] = make(DayOfWeekMap)
+		}
+
+		if _, exists := dataMap[sch.WeekStartDate][sch.DayOfWeek]; !exists {
+			dataMap[sch.WeekStartDate][sch.DayOfWeek] = []ClockInOut{}
+		}
+
+		dataMap[sch.WeekStartDate][sch.DayOfWeek] = append(
+			dataMap[sch.WeekStartDate][sch.DayOfWeek],
+			ClockInOut{
+				ID:       sch.ID,
+				ClockIn:  sch.ClockIn,
+				ClockOut: sch.ClockOut,
+			},
+		)
+	}
+
+	data, err := json.Marshal(dataMap)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error().Msgf("Failed to marshal user schedules: %v", err)
+		log.Error().Msgf("Failed to marshal schedules map: %v", err)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
-}
-
-func (h *Handler) PostSchedules(w http.ResponseWriter, r *http.Request) {
-	var schedules []sqlc.Schedule
-
-	decoder := json.NewDecoder(r.Body)
-	defer r.Body.Close()
-
-	if err := decoder.Decode(&schedules); err != nil {
-		http.Error(w, "Error parsing JSON", http.StatusBadRequest)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	err := h.db.ClearSchedules(ctx)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Error().Msgf("Failed to clear schedules: %v", err)
-		return
-	}
-
-	for _, schedule := range schedules {
-		err := h.db.SetSchedule(ctx, sqlc.SetScheduleParams{
-			ID:         schedule.ID,
-			EmployeeID: schedule.EmployeeID,
-			DayOfWeek:  schedule.DayOfWeek,
-			ClockIn:    schedule.ClockIn,
-			ClockOut:   schedule.ClockOut,
-		})
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			log.Error().Msgf("Failed to set schedule: %v", err)
-			return
-		}
-	}
-
-	w.WriteHeader(http.StatusOK)
-}
-
-func (h *Handler) GetSubsheet(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "<h1>Getting subsheet...</h1>")
-}
-
-func (h *Handler) PostSubrequest(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "<h1>Posting subrequest...</h1>")
 }

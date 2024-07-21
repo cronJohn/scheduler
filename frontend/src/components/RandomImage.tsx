@@ -4,33 +4,22 @@ const RandomImage: Component = () => {
     const [getImageIndex, setImageIndex] = createSignal<number>(0);
     const [getImageMeta, setImageMeta] = createSignal<string>("");
 
-    async function getImageMetadata(): Promise<any> {
-        try {
-            const response = await fetch('/assets/randomImages/metadata.json');
-            if (!response.ok) {
-                throw new Error(response.statusText);
-            }
-            return await response.json();
-        } catch (error) {
-            console.error('Error fetching image metadata:', error);
-            return null;
-        }
-    }
 
     onMount(async () => {
-        const data = await getImageMetadata();
-        if (data) {
-            const keys = Object.keys(data);
-            const randomIndex = Math.floor(Math.random() * keys.length);
+        const metadata: { [key: number]: string } = {
+            0: "Chippi cat",
+            1: "Side eye cat",
+            2: "Caseoh cat"
+        };  
+        const randomIndex = Math.floor(Math.random() * Object.keys(metadata).length);
 
-            setImageIndex(randomIndex);
-            setImageMeta(data[keys[randomIndex]]);
-        }
+        setImageIndex(randomIndex);
+        setImageMeta(metadata[randomIndex]);
     });
 
     return (
         <img src={`/assets/randomImages/${getImageIndex()}.webp`} alt={getImageMeta() || "Random Image"}
-        class='rd-15px w-2/3 h-auto'/>
+        class='rd-15px min-w-250px max-h-250px'/>
     );
 };
 

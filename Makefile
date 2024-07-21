@@ -34,4 +34,4 @@ db-reset: sqlc db-clean db-setup
 sqlc:
 	@sqlc generate
 
-.PHONY: clean build build-server build-cli run-serv run-cli db-clean db-setup
+.PHONY: clean build build-server build-cli run-serv run-cli db-clean db-setup sqlc

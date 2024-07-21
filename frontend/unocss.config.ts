@@ -9,14 +9,15 @@ export default defineConfig({
         provider: 'google',
         fonts: {
             code: 'JetBrains Mono',
+            norm: 'Inter',
         },
       }),
   ],
   rules: [
       ['nm', {
-      'border-radius': '43px',
+      'border-radius': '13px',
       'background': '#0E0E0E',
-      'box-shadow': '8px 8px 16px #060606, -8px -8px 16px #161616',
+      'box-shadow': '10px 10px 20px #060606, -10px -10px 20px #161616',
     }],
   ],
   theme: {
@@ -25,6 +26,7 @@ export default defineConfig({
         light: '#FAF7FF',
         dark: '#0E0E0E',
         offDark: '#1e1e1e',
+        slightDark: '#1D1D1D',
     }
   }
 });
