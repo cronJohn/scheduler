@@ -1,12 +1,8 @@
 import { For, Match, Show, Switch, createResource, createSignal, onMount, type Component } from 'solid-js';
 import { Spinner, SpinnerType } from 'solid-spinner';
-import Modal from 'solid-dialog';
+import Modal from '@lutaok/solid-modal';
 import { itd, mtr } from '../utils/conv';
-
-const fetchSchedules = async (id: string) => {
-  const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/${id}/schedule`);
-  return response.json();
-}
+import { fetchSchedules } from '../utils/api';
 
 let inputBuf: string = "";
 
@@ -48,7 +44,7 @@ const Schedules: Component = () => {
             </Show>
             <Switch>
                 <Match when={fetchData.error}>
-                    <Modal isShown={fetchData.error} closeModal={() => {}}>
+                    <Modal isOpen={fetchData.error} closeOnOutsideClick onCloseRequest={() => {}}>
                         <p class='font-code'>Invalid ID</p>
                     </Modal>
                 </Match>

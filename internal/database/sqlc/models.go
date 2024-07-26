@@ -9,8 +9,8 @@ type Schedule struct {
 	UserID        string `json:"user_id"`
 	WeekStartDate string `json:"week_start_date"`
 	DayOfWeek     int64  `json:"day_of_week"`
-	ClockIn       int64  `json:"clock_in"`
-	ClockOut      int64  `json:"clock_out"`
+	ClockIn       string `json:"clock_in"`
+	ClockOut      string `json:"clock_out"`
 }
 
 type User struct {

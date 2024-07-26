@@ -9,6 +9,40 @@ import (
 	"context"
 )
 
+const createSchedule = `-- name: CreateSchedule :exec
+INSERT INTO schedules (user_id, week_start_date, day_of_week, clock_in, clock_out)
+VALUES (?, ?, ?, ?, ?)
+`
+
+type CreateScheduleParams struct {
+	UserID        string `json:"user_id"`
+	WeekStartDate string `json:"week_start_date"`
+	DayOfWeek     int64  `json:"day_of_week"`
+	ClockIn       string `json:"clock_in"`
+	ClockOut      string `json:"clock_out"`
+}
+
+func (q *Queries) CreateSchedule(ctx context.Context, arg CreateScheduleParams) error {
+	_, err := q.db.ExecContext(ctx, createSchedule,
+		arg.UserID,
+		arg.WeekStartDate,
+		arg.DayOfWeek,
+		arg.ClockIn,
+		arg.ClockOut,
+	)
+	return err
+}
+
+const deleteSchedule = `-- name: DeleteSchedule :exec
+DELETE FROM schedules
+WHERE id = ?
+`
+
+func (q *Queries) DeleteSchedule(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteSchedule, id)
+	return err
+}
+
 const getSchedulesByUserID = `-- name: GetSchedulesByUserID :many
 SELECT id, week_start_date, day_of_week, clock_in, clock_out
 FROM schedules
@@ -19,8 +53,8 @@ type GetSchedulesByUserIDRow struct {
 	ID            int64  `json:"id"`
 	WeekStartDate string `json:"week_start_date"`
 	DayOfWeek     int64  `json:"day_of_week"`
-	ClockIn       int64  `json:"clock_in"`
-	ClockOut      int64  `json:"clock_out"`
+	ClockIn       string `json:"clock_in"`
+	ClockOut      string `json:"clock_out"`
 }
 
 func (q *Queries) GetSchedulesByUserID(ctx context.Context, userID string) ([]GetSchedulesByUserIDRow, error) {
@@ -78,4 +112,21 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateScheduleTimes = `-- name: UpdateScheduleTimes :exec
+UPDATE schedules
+SET clock_in = ?, clock_out = ?
+WHERE id = ?
+`
+
+type UpdateScheduleTimesParams struct {
+	ClockIn  string `json:"clock_in"`
+	ClockOut string `json:"clock_out"`
+	ID       int64  `json:"id"`
+}
+
+func (q *Queries) UpdateScheduleTimes(ctx context.Context, arg UpdateScheduleTimesParams) error {
+	_, err := q.db.ExecContext(ctx, updateScheduleTimes, arg.ClockIn, arg.ClockOut, arg.ID)
+	return err
 }
