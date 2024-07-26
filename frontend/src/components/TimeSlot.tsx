@@ -14,7 +14,7 @@ export const TimeSlot: Component<{
     }
 
     return (
-    <div class='relative nm p-4 mb-4 rounded'>
+    <div class='relative nm p-4 rounded'>
       <div class='flex justify-between items-center gap-8'>
         <div>
           <p class='text-xl my-0'>In:</p>

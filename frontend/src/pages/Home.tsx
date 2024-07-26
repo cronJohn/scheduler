@@ -1,5 +1,5 @@
 import type { Component } from 'solid-js';
-import RandomImage from '../components/RandomImage';
+import { RandomImage } from '../components/RandomImage';
 
 const Home: Component = () => {
     return (

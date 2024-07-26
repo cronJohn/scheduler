@@ -1,6 +1,6 @@
 import { createSignal, onMount, type Component } from 'solid-js';
 
-const RandomImage: Component = () => {
+export const RandomImage: Component = () => {
     const [getImageIndex, setImageIndex] = createSignal<number>(0);
     const [getImageMeta, setImageMeta] = createSignal<string>("");
 
@@ -22,5 +22,3 @@ const RandomImage: Component = () => {
         class='rd-15px min-w-250px max-h-250px'/>
     );
 };
-
-export default RandomImage;
