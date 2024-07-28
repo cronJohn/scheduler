@@ -7,16 +7,16 @@ export type ScheduleRequest = {
     clock_out?: string
 }
 
+export interface ScheduleData {
+    [date: string]: DaySchedule;
+}
+
+export interface DaySchedule {
+    [key: string]: ScheduleEntry[];
+}
+
 export interface ScheduleEntry {
   ID: number;
   ClockIn: string;
   ClockOut: string;
-}
-
-export interface DaySchedule {
-  [key: string]: ScheduleEntry[];
-}
-
-export interface ScheduleData {
-  [date: string]: DaySchedule;
 }
