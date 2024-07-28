@@ -7,15 +7,21 @@ export type ScheduleRequest = {
     clock_out?: string
 }
 
-export interface ScheduleData {
+export type UserResponse = {
+    id: string
+    name: string
+    role: string
+}
+
+export type ScheduleData = {
     [date: string]: DaySchedule;
 }
 
-export interface DaySchedule {
+export type DaySchedule = {
     [key: string]: ScheduleEntry[];
 }
 
-export interface ScheduleEntry {
+export type ScheduleEntry = {
   ID: number;
   ClockIn: string;
   ClockOut: string;

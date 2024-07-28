@@ -1,4 +1,4 @@
-import { ScheduleData, ScheduleRequest } from "./types";
+import { ScheduleData, ScheduleRequest, UserResponse } from "./types";
 
 const logResponse = (response: Response) => {
     if (!response.ok) {
@@ -6,7 +6,7 @@ const logResponse = (response: Response) => {
     }
 }
 
-export const fetchUsers = async () => {
+export const fetchUsers = async (): Promise<UserResponse[]> => {
     return (await fetch(`${import.meta.env.VITE_SERV}/api/users`)).json();
 }
 
@@ -28,8 +28,6 @@ export const createSchedule = async (input: ScheduleRequest) => {
 }
 
 export const updateSchedule = async (input: ScheduleRequest) => {
-    console.log('input stuff: ', input);
-    
     const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/${input.user_id}/schedule`, {
         method: 'PUT',
         headers: {

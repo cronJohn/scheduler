@@ -6,11 +6,11 @@ export const TimeSlot: Component<{
     clockIn: string;
     clockOut: string;
     openModal: () => void;
-    onEditFn: (id: number, clockIn: string, clockOut: string) => void;
+    editFn: (id: number, clockIn: string, clockOut: string) => void;
 }> = (props) => {
     const handleEdit = () => {
         props.openModal();
-        props.onEditFn(props.id, props.clockIn, props.clockOut);
+        props.editFn(props.id, props.clockIn, props.clockOut);
     }
 
     return (
