@@ -141,9 +141,6 @@ func (h *Handler) UpdateUserSchedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Info().
-		Msgf("ClockIn: %v, ClockOut: %v UserID: %v EventID: %v", req.ClockIn, req.ClockOut, req.UserID, req.EntryID)
-
 	err := h.db.UpdateScheduleTimes(ctx, sqlc.UpdateScheduleTimesParams{
 		ID:       req.EntryID,
 		ClockIn:  req.ClockIn,
