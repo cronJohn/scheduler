@@ -12,6 +12,7 @@ import Schedules from './pages/Schedules';
 import Login from './pages/Login';
 import Admin from './pages/Admin';
 import Unknown from './pages/Unknown';
+import { UsersProvider } from './context/Users';
 
 const root = document.getElementById('root');
 
@@ -23,13 +24,15 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
 
 render(
     () => (
-        <Router>
-            <Route path="/" component={Home} />
-            <Route path="/schedules" component={Schedules} />
-            <Route path="/login" component={Login} />
-            <Route path="/admin" component={Admin} />
-            <Route path="/*" component={Unknown} />
-        </Router>
+        <UsersProvider>
+            <Router>
+                <Route path="/" component={Home} />
+                <Route path="/schedules" component={Schedules} />
+                <Route path="/login" component={Login} />
+                <Route path="/admin" component={Admin} />
+                <Route path="/*" component={Unknown} />
+            </Router>
+        </UsersProvider>
     ),
     root!,
 );

@@ -2,17 +2,32 @@ import { ScheduleData, ScheduleRequest, UserResponse } from "./types";
 
 const logResponse = (response: Response) => {
     if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        console.error(`HTTP error! status: ${response.status}`);
     }
 }
 
 export const fetchUsers = async (): Promise<UserResponse[]> => {
-    return (await fetch(`${import.meta.env.VITE_SERV}/api/users`)).json();
+    try {
+        const response = await fetch(`${import.meta.env.VITE_SERV}/api/users`);
+        if (response.ok) {
+            return response.json();
+        } return [];
+    } catch (error) {
+        console.error(error);
+        return [];
+    }
 }
 
 export const fetchSchedules = async (id: string): Promise<ScheduleData> => {
-    const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/${id}/schedule`);
-    return response.json();
+    try {
+        const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/${id}/schedule`);
+        if (response.ok) {
+            return response.json();
+        } return {};
+    } catch (error) {
+        console.error(error);
+        return {}
+    }
 }
 
 export const createSchedule = async (input: ScheduleRequest) => {

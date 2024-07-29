@@ -1,21 +1,19 @@
 import { For, Show, createResource, createSignal, type Component } from 'solid-js';
-import { fetchUsers, fetchSchedules, updateSchedule, deleteSchedule } from '../utils/api';
+import { fetchSchedules, updateSchedule, deleteSchedule, createSchedule } from '../utils/api';
 import { itd } from '../utils/conv';
-import { DaySchedule, ScheduleRequest, UserResponse } from '../utils/types';
+import { DaySchedule, ScheduleRequest } from '../utils/types';
 import { TimeSlot } from '../components/TimeSlot';
 import { createStore, produce } from 'solid-js/store';
 import { EditTimeSlot } from '../components/modals/EditTimeSlot';
 import { SelectUser } from '../components/SelectUser';
+import { AddEntry } from '../components/modals/AddEntry';
 
 const Admin: Component = () => {
-    const [isModalOpen, setIsModalOpen] = createSignal<boolean>(false);
-    const [users] = createResource<UserResponse[]>(fetchUsers);
+    const [isTimeSlotModalOpen, setIsTimeSlotModalOpen] = createSignal<boolean>(false);
+    const [isAddEntryModalOpen, setIsAddEntryModalOpen] = createSignal<boolean>(false);
 
     const [currentSelectData, setCurrentSelectData] = createStore<ScheduleRequest>();
     const [schedules, { refetch }] = createResource(() => currentSelectData.user_id, fetchSchedules);
-
-    const openModal = () => {setIsModalOpen(true)};
-    const closeModal = () => {setIsModalOpen(false)};
 
     const calculateTotalWeekHours = (data: DaySchedule): number => {
         if (!data) return 0;
@@ -43,7 +41,6 @@ const Admin: Component = () => {
 
         return Math.round(Math.abs(totalHours));
     }
-    
 
     const handleTimeSlotEdit = (id: number, clockIn: string, clockOut: string) => {
         setCurrentSelectData(
@@ -55,12 +52,23 @@ const Admin: Component = () => {
         );
     };
 
+    const handleAdd = async (input: ScheduleRequest) => {
+        try {
+            if (!currentSelectData) return;
+            await createSchedule(input);
+            refetch();
+            setIsAddEntryModalOpen(false);
+        } catch (error) {
+            console.error("Failed to update schedule", error);
+        }
+    };
+
     const handleUpdate = async () => {
         try {
             if (!currentSelectData) return;
             await updateSchedule(currentSelectData);
             refetch();
-            setIsModalOpen(false);
+            setIsTimeSlotModalOpen(false);
         } catch (error) {
             console.error("Failed to update schedule", error);
         }
@@ -71,7 +79,7 @@ const Admin: Component = () => {
             if (!currentSelectData) return;
             await deleteSchedule(currentSelectData);
             refetch();
-            setIsModalOpen(false);
+            setIsTimeSlotModalOpen(false);
         } catch (error) {
             console.error("Failed to delete schedule", error);
         }
@@ -80,7 +88,11 @@ const Admin: Component = () => {
     return (
         <>
             <div class='mt-20 mb-10 w-100wv flex gap-4 justify-center'>
-                <SelectUser setFn={setCurrentSelectData} getFn={users} />
+                <label for="user_id" class="text-2xl font-code my-auto">User ID: </label>
+                <SelectUser setFn={setCurrentSelectData} />
+
+                <button class='bg-dark color-light border-light border-solid border-1px px-4 py-2 rounded text-lg
+                hover:bg-light hover:text-dark hover:border-dark transition duration-100' onClick={() => setIsAddEntryModalOpen(true)}>Add entry</button>
             </div>
 
             <Show when={currentSelectData.user_id && !schedules.loading}>
@@ -98,10 +110,8 @@ const Admin: Component = () => {
                                     <div class='flex gap-10 border-solid border-light border-1px rounded px-5 py-5 mb-5'>
                                         <For each={schedule_entries}>
                                         {(entry) => (
-                                            <>
-                                                <TimeSlot id={entry.ID} clockIn={entry.ClockIn} clockOut={entry.ClockOut} openModal={openModal}
-                                                editFn={handleTimeSlotEdit}/>
-                                            </>
+                                            <TimeSlot id={entry.ID} clockIn={entry.ClockIn} clockOut={entry.ClockOut} openModal={() => setIsTimeSlotModalOpen(true)}
+                                            editFn={handleTimeSlotEdit}/>
                                         )}
                                         </For>
                                     </div>
@@ -114,8 +124,11 @@ const Admin: Component = () => {
                 </For>
             </Show>
 
-            <EditTimeSlot isModalOpen={isModalOpen} closeModal={closeModal} handleUpdate={handleUpdate} handleDelete={handleDelete} 
+            <EditTimeSlot isModalOpen={isTimeSlotModalOpen} closeModal={() => setIsTimeSlotModalOpen(false)} handleUpdate={handleUpdate} handleDelete={handleDelete} 
             setFn={setCurrentSelectData} getFn={() => currentSelectData}/>
+
+            <AddEntry isModalOpen={isAddEntryModalOpen} closeModal={() => setIsAddEntryModalOpen(false)} handleAdd={handleAdd}
+            defaultUser={currentSelectData.user_id}/>
 
         </>
     );
