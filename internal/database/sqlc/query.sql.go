@@ -43,6 +43,21 @@ func (q *Queries) DeleteSchedule(ctx context.Context, id int64) error {
 	return err
 }
 
+const deleteSchedulesByIdAndWeekStartDate = `-- name: DeleteSchedulesByIdAndWeekStartDate :exec
+DELETE FROM schedules
+WHERE user_id = ? AND week_start_date = ?
+`
+
+type DeleteSchedulesByIdAndWeekStartDateParams struct {
+	UserID        string `json:"user_id"`
+	WeekStartDate string `json:"week_start_date"`
+}
+
+func (q *Queries) DeleteSchedulesByIdAndWeekStartDate(ctx context.Context, arg DeleteSchedulesByIdAndWeekStartDateParams) error {
+	_, err := q.db.ExecContext(ctx, deleteSchedulesByIdAndWeekStartDate, arg.UserID, arg.WeekStartDate)
+	return err
+}
+
 const getSchedulesByUserID = `-- name: GetSchedulesByUserID :many
 SELECT id, week_start_date, day_of_week, clock_in, clock_out
 FROM schedules
@@ -128,5 +143,23 @@ type UpdateScheduleTimesParams struct {
 
 func (q *Queries) UpdateScheduleTimes(ctx context.Context, arg UpdateScheduleTimesParams) error {
 	_, err := q.db.ExecContext(ctx, updateScheduleTimes, arg.ClockIn, arg.ClockOut, arg.ID)
+	return err
+}
+
+const updateWeekStartDateByUserID = `-- name: UpdateWeekStartDateByUserID :exec
+UPDATE schedules
+SET week_start_date = ?
+WHERE user_id = ?
+  AND week_start_date = ?
+`
+
+type UpdateWeekStartDateByUserIDParams struct {
+	WeekStartDate   string `json:"week_start_date"`
+	UserID          string `json:"user_id"`
+	WeekStartDate_2 string `json:"week_start_date_2"`
+}
+
+func (q *Queries) UpdateWeekStartDateByUserID(ctx context.Context, arg UpdateWeekStartDateByUserIDParams) error {
+	_, err := q.db.ExecContext(ctx, updateWeekStartDateByUserID, arg.WeekStartDate, arg.UserID, arg.WeekStartDate_2)
 	return err
 }

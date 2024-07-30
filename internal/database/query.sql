@@ -16,6 +16,16 @@ UPDATE schedules
 SET clock_in = ?, clock_out = ?
 WHERE id = ?;
 
+-- name: UpdateWeekStartDateByUserID :exec
+UPDATE schedules
+SET week_start_date = ?
+WHERE user_id = ?
+  AND week_start_date = ?;
+
 -- name: DeleteSchedule :exec
 DELETE FROM schedules
 WHERE id = ?;
+
+-- name: DeleteSchedulesByIdAndWeekStartDate :exec
+DELETE FROM schedules
+WHERE user_id = ? AND week_start_date = ?;

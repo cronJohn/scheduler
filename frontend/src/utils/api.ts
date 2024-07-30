@@ -30,7 +30,7 @@ export const fetchSchedules = async (id: string): Promise<ScheduleData> => {
     }
 }
 
-export const createSchedule = async (input: ScheduleRequest) => {
+export const createNewSchedule = async (input: ScheduleRequest) => {
     const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/schedule`, {
         method: 'POST',
         headers: {
@@ -42,7 +42,7 @@ export const createSchedule = async (input: ScheduleRequest) => {
     logResponse(response);
 }
 
-export const updateSchedule = async (input: ScheduleRequest) => {
+export const updateExistingSchedule = async (input: ScheduleRequest) => {
     const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/${input.user_id}/schedule`, {
         method: 'PUT',
         headers: {
@@ -54,8 +54,32 @@ export const updateSchedule = async (input: ScheduleRequest) => {
     logResponse(response);
 }
 
-export const deleteSchedule = async (input: ScheduleRequest) => {
+export const updateUserWeekStartDate = async (input: ScheduleRequest) => {
+    const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/${input.user_id}/weekstart`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(input),
+    });
+
+    logResponse(response);
+}
+
+export const deleteExistingSchedule = async (input: ScheduleRequest) => {
     const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/${input.user_id}/schedule`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(input),
+    });
+
+    logResponse(response);
+}
+
+export const deleteUserWeekStartDate = async (input: ScheduleRequest) => {
+    const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/${input.user_id}/weekstart`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',

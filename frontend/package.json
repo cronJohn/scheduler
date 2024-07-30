@@ -11,9 +11,11 @@
   },
   "license": "MIT",
   "devDependencies": {
+    "@iconify-json/mdi": "^1.1.67",
     "@solidjs/testing-library": "^0.8.5",
     "@testing-library/jest-dom": "^6.2.0",
     "@types/testing-library__jest-dom": "^5.14.9",
+    "@unocss/preset-icons": "^0.61.7",
     "jsdom": "^23.2.0",
     "solid-devtools": "^0.29.2",
     "typescript": "^5.3.3",

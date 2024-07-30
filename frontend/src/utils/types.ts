@@ -2,6 +2,7 @@ export type ScheduleRequest = {
     user_id?: string
     id?: number
     week_start_date?: string
+    old_week_start_date?: string
     day_of_week?: number
     clock_in?: string
     clock_out?: string

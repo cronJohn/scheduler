@@ -94,12 +94,13 @@ func (h *Handler) GetUserSchedule(w http.ResponseWriter, r *http.Request) {
 }
 
 type ScheduleRequest struct {
-	UserID        string `json:"user_id"`
-	EntryID       int64  `json:"id"`
-	WeekStartDate string `json:"week_start_date"`
-	DayOfWeek     int64  `json:"day_of_week"`
-	ClockIn       string `json:"clock_in"`
-	ClockOut      string `json:"clock_out"`
+	UserID           string `json:"user_id"`
+	EntryID          int64  `json:"id"`
+	WeekStartDate    string `json:"week_start_date"`
+	OldWeekStartDate string `json:"old_week_start_date"`
+	DayOfWeek        int64  `json:"day_of_week"`
+	ClockIn          string `json:"clock_in"`
+	ClockOut         string `json:"clock_out"`
 }
 
 func (h *Handler) CreateUserSchedule(w http.ResponseWriter, r *http.Request) {
@@ -122,7 +123,7 @@ func (h *Handler) CreateUserSchedule(w http.ResponseWriter, r *http.Request) {
 		ClockOut:      req.ClockOut,
 	})
 	if err != nil {
-		http.Error(w, "Failed to update schedule", http.StatusInternalServerError)
+		http.Error(w, "Failed to create schedule", http.StatusInternalServerError)
 		return
 	}
 
@@ -154,6 +155,31 @@ func (h *Handler) UpdateUserSchedule(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func (h *Handler) UpdateUserWeekStart(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var req ScheduleRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Error().Msgf("Failed to decode request body: %v", err)
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	err := h.db.UpdateWeekStartDateByUserID(ctx, sqlc.UpdateWeekStartDateByUserIDParams{
+		WeekStartDate:   req.WeekStartDate,
+		UserID:          req.UserID,
+		WeekStartDate_2: req.OldWeekStartDate,
+	})
+	if err != nil {
+		http.Error(w, "Failed to update week start date", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
 func (h *Handler) DeleteUserSchedule(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -168,7 +194,34 @@ func (h *Handler) DeleteUserSchedule(w http.ResponseWriter, r *http.Request) {
 
 	err := h.db.DeleteSchedule(ctx, req.EntryID)
 	if err != nil {
-		http.Error(w, "Failed to update schedule", http.StatusInternalServerError)
+		http.Error(w, "Failed to delete schedule", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *Handler) DeleteUserWeekStart(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var req ScheduleRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Error().Msgf("Failed to decode request body: %v", err)
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	err := h.db.DeleteSchedulesByIdAndWeekStartDate(
+		ctx,
+		sqlc.DeleteSchedulesByIdAndWeekStartDateParams{
+			UserID:        req.UserID,
+			WeekStartDate: req.WeekStartDate,
+		},
+	)
+	if err != nil {
+		http.Error(w, "Failed to delete week start date", http.StatusInternalServerError)
 		return
 	}
 
