@@ -1,24 +1,34 @@
 import Modal from "@lutaok/solid-modal";
-import { Component, createSignal } from "solid-js";
-import { ScheduleRequest } from "../../utils/types";
+import { Component, createEffect, createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
 import { SelectUser } from "../SelectUser";
+import { NewScheduleData } from "../../utils/api";
+import { getDateISO } from "../../utils/helper";
 
-export const AddEntry: Component<{
+export const AddEntryModal: Component<{
     isModalOpen: () => boolean;
     closeModal: () => void;
-    handleAdd: (input: ScheduleRequest) => void;
-    defaultUser?: string
+    getStateFn: () => NewScheduleData;
+    targetUser: string;
+    handleAdd: (data: NewScheduleData, userId: string) => void;
 }> = (props) => {
-    const [state, setState] = createStore<ScheduleRequest>(
+    const [state, setState] = createStore<NewScheduleData>(
         {
-            user_id: props.defaultUser,
-            week_start_date: "",
-            day_of_week: 0,
-            clock_in: "11:00",
-            clock_out: "12:00"
+            weekStartDate: getDateISO(),
+            dayOfWeek: props.getStateFn().dayOfWeek,
+            clockIn: props.getStateFn().clockIn,
+            clockOut: props.getStateFn().clockOut
         }
     )
+
+    createEffect(() => {
+        const buf = currentUser(); // Prevent losing previous state
+        if (isSelectDisabled()){
+            setCurrentUser(props.targetUser);
+        } else {setCurrentUser(buf)}
+    })
+
+    const [currentUser, setCurrentUser] = createSignal<string>("");
     const [isSelectDisabled, setIsSelectDisabled] = createSignal(false);
 
     return <Modal isOpen={props.isModalOpen()} onCloseRequest={props.closeModal} closeOnOutsideClick overlayStyle={{ "background-color": 'rgba(14, 14, 14, 0.7)' }}>
@@ -27,7 +37,7 @@ export const AddEntry: Component<{
             {/* User ID Input */}
             <section class="flex items-center ">
                 <label for="user_id" class="text-2xl font-code my-auto">User ID: </label>
-                <SelectUser setFn={setState} isDisabled={isSelectDisabled()} placeholder={isSelectDisabled() ? props.defaultUser : undefined}/>
+                <SelectUser setFn={(input: string) => setCurrentUser(input)} isDisabled={isSelectDisabled()} placeholder={isSelectDisabled() ? currentUser() : undefined}/>
                 <input 
                   type="checkbox" 
                   class="ml-4 " 
@@ -44,8 +54,8 @@ export const AddEntry: Component<{
                 <input
                     id="week_start_date"
                     type="date"
-                    value={state.week_start_date}
-                    onInput={(e) => setState("week_start_date", e.currentTarget.value)}
+                    value={state.weekStartDate}
+                    onInput={(e) => setState("weekStartDate", e.currentTarget.value)}
                     class="py-2 px-4 border-2 border-solid border-primary rounded bg-offDark text-2xl text-white"
                 />
             </section>
@@ -55,8 +65,8 @@ export const AddEntry: Component<{
                 <label for="day_of_week" class="">Day of Week:</label>
                 <select
                     id="day_of_week"
-                    value={state.day_of_week}
-                    onChange={(e) => setState("day_of_week", parseInt(e.currentTarget.value))}
+                    value={state.dayOfWeek}
+                    onChange={(e) => setState("dayOfWeek", parseInt(e.currentTarget.value))}
                     class="w-full py-2 px-4 border-2 border-solid border-primary rounded bg-offDark text-2xl text-white"
                 >
                     <option value="0">Sunday</option>
@@ -75,8 +85,8 @@ export const AddEntry: Component<{
                 <input
                     id="clock_in"
                     type="time"
-                    value={state.clock_in}
-                    onInput={(e) => setState("clock_in", e.currentTarget.value)}
+                    value={state.clockIn}
+                    onInput={(e) => setState("clockIn", e.currentTarget.value)}
                     class="py-2 px-4 border-2 border-solid border-primary rounded bg-offDark text-2xl text-white text-center"
                 />
             </section>
@@ -87,12 +97,12 @@ export const AddEntry: Component<{
                 <input
                     id="clock_out"
                     type="time"
-                    value={state.clock_out}
-                    onInput={(e) => setState("clock_out", e.currentTarget.value)}
+                    value={state.clockOut}
+                    onInput={(e) => setState("clockOut", e.currentTarget.value)}
                     class="py-2 px-4 border-2 border-solid border-primary rounded bg-offDark text-2xl text-white text-center"
                 />
             </section>
-            <button class="bg-blue text-lg font-code rounded mt-4 px-4 py-2" onClick={[props.handleAdd, state]}>Add</button>
+            <button class="bg-blue text-lg font-code rounded mt-4 px-4 py-2" onClick={() => props.handleAdd(state, currentUser())}>Add</button>
         </div>
     </Modal>
 };

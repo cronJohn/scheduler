@@ -1,28 +1,35 @@
-import { For, Show, createEffect, createResource, createSignal, type Component } from 'solid-js';
-import { fetchSchedules, updateExistingSchedule, deleteExistingSchedule, createNewSchedule, deleteUserWeekStartDate, updateUserWeekStartDate } from '../utils/api';
+import { For, Show, createResource, createSignal, type Component } from 'solid-js';
+import { fetchSchedules, updateExistingSchedule, deleteExistingSchedule, createNewSchedule, deleteUserWeekStartDate, updateUserWeekStartDate, NewScheduleData, UpdateScheduleData, UpdateWeekStartData, DeleteScheduleData, DeleteUserWeekStartDateData } from '../utils/api';
 import { itd } from '../utils/conv';
-import { DaySchedule, ScheduleRequest } from '../utils/types';
 import { TimeSlot } from '../components/TimeSlot';
 import { createStore, produce } from 'solid-js/store';
-import { EditTimeSlot } from '../components/modals/EditTimeSlot';
+import { EditTimeSlotModal } from '../components/modals/EditTimeSlotModal';
 import { SelectUser } from '../components/SelectUser';
-import { AddEntry } from '../components/modals/AddEntry';
-import { UpdateWeekStart } from '../components/modals/UpdateWeekStart';
+import { AddEntryModal } from '../components/modals/AddEntryModal';
+import { UpdateWeekStartModal } from '../components/modals/UpdateWeekStartModal';
+import { ActiveState, DaySchedule, TimeEntry } from '../utils/types';
 
 const Admin: Component = () => {
     const [isTimeSlotModalOpen, setIsTimeSlotModalOpen] = createSignal<boolean>(false);
     const [isAddEntryModalOpen, setIsAddEntryModalOpen] = createSignal<boolean>(false);
     const [isUpdateWeekStartModalOpen, setIsUpdateWeekStartModalOpen] = createSignal<boolean>(false);
-    const openUpdateWeekStartModal = (week_start_date: string) => {
-        setIsUpdateWeekStartModalOpen(true);
-        setHoveredWeek(week_start_date);
-        setCurrentSelectData("old_week_start_date", week_start_date);
-    }
 
     const [hoveredWeek, setHoveredWeek] = createSignal<string | null>(null);
+    const [currentSelection, setCurrentSelection] = createStore<ActiveState>({
+        userId: null,
+        entryId: 0,
+        weekStartDate: "2024-01-01",
+        dayOfWeek: 0,
+        clockIn: "11:00",
+        clockOut: "12:00",
+    });
 
-    const [currentSelectData, setCurrentSelectData] = createStore<ScheduleRequest>();
-    const [schedules, { refetch }] = createResource(() => currentSelectData.user_id, fetchSchedules);
+    const [schedules, { refetch }] = createResource(() => currentSelection.userId, fetchSchedules);
+
+    const openUpdateWeekStartModal = (weekStart: string) => {
+        setIsUpdateWeekStartModalOpen(true);
+        setHoveredWeek(weekStart);
+    }
 
     const calculateTotalWeekHours = (data: DaySchedule): number => {
         if (!data) return 0;
@@ -30,10 +37,10 @@ const Admin: Component = () => {
         let totalHours = 0;
         const MS_PER_HOUR = 1000 * 60 * 60;
 
-        for (const daySchedule of Object.values(data)) {
-            for (const entry of Object.values(daySchedule)) {
-                const [inHours, inMinutes] = entry?.ClockIn.split(":")
-                const [outHours, outMinutes] = entry?.ClockOut.split(":")
+        for (const dayEntries of Object.values(data)) {
+            for (const entry of Object.values(dayEntries)) {
+                const [inHours, inMinutes] = entry.clockIn.split(":")
+                const [outHours, outMinutes] = entry.clockOut.split(":")
 
                 const inDate = new Date();
                 inDate.setHours(parseInt(inHours), parseInt(inMinutes));
@@ -51,20 +58,20 @@ const Admin: Component = () => {
         return Math.round(Math.abs(totalHours));
     }
 
-    const handleTimeSlotEdit = (id: number, clockIn: string, clockOut: string) => {
-        setCurrentSelectData(
+    const handleTimeSlotEdit = (data: TimeEntry) => {
+        setCurrentSelection(
             produce((state) => {
-                state.id = id;
-                state.clock_in = clockIn;
-                state.clock_out = clockOut;
+                state.entryId = data.id;
+                state.clockIn = data.clockIn;
+                state.clockOut = data.clockOut;
             })
         );
     };
 
-    const handleAddNewSchedule = async (input: ScheduleRequest) => {
+    const handleAddNewSchedule = async (data: NewScheduleData, userId: string) => {
         try {
-            if (!currentSelectData) return;
-            await createNewSchedule(input);
+            if (!currentSelection) return;
+            await createNewSchedule(userId, data);
             refetch();
             setIsAddEntryModalOpen(false);
         } catch (error) {
@@ -72,10 +79,10 @@ const Admin: Component = () => {
         }
     };
 
-    const handleUpdateExistingSchedule = async () => {
+    const handleUpdateExistingSchedule = async (data: UpdateScheduleData) => {
         try {
-            if (!currentSelectData) return;
-            await updateExistingSchedule(currentSelectData);
+            if (!currentSelection) return;
+            await updateExistingSchedule(data);
             refetch();
             setIsTimeSlotModalOpen(false);
         } catch (error) {
@@ -83,14 +90,10 @@ const Admin: Component = () => {
         }
     };
 
-    const handleUpdateUserWeekStart = async (week_start_date: string) => {
+    const handleUpdateUserWeekStart = async (data: UpdateWeekStartData) => {
         try {
-            if (!currentSelectData) return;
-            await updateUserWeekStartDate({
-                user_id: currentSelectData.user_id,
-                week_start_date,
-                old_week_start_date: currentSelectData.old_week_start_date
-            });
+            if (!currentSelection) return;
+            await updateUserWeekStartDate(currentSelection.userId ?? "", data)
             refetch();
             setIsUpdateWeekStartModalOpen(false);
         } catch (error) {
@@ -98,10 +101,10 @@ const Admin: Component = () => {
         }
     }
 
-    const handleDeleteExistingSchedule = async () => {
+    const handleDeleteExistingSchedule = async (data: DeleteScheduleData) => {
         try {
-            if (!currentSelectData) return;
-            await deleteExistingSchedule(currentSelectData);
+            if (!currentSelection) return;
+            await deleteExistingSchedule(data);
             refetch();
             setIsTimeSlotModalOpen(false);
         } catch (error) {
@@ -109,12 +112,9 @@ const Admin: Component = () => {
         }
     };
 
-    const handleDeleteUserWeekStartDate = async () => {
+    const handleDeleteUserWeekStartDate = async (data: DeleteUserWeekStartDateData) => {
         try {
-            await deleteUserWeekStartDate({
-                user_id: currentSelectData.user_id,
-                week_start_date: hoveredWeek() ?? ""
-            })
+            await deleteUserWeekStartDate(currentSelection.userId ?? "", data);
             refetch();
         } catch (error) {
             console.error("Failed to delete week start date", error);
@@ -125,13 +125,13 @@ const Admin: Component = () => {
         <>
             <div class='mt-20 mb-10 w-100wv flex gap-4 justify-center'>
                 <label for="user_id" class="text-2xl font-code my-auto">User ID: </label>
-                <SelectUser setFn={setCurrentSelectData} />
+                <SelectUser setFn={(input: string) => setCurrentSelection("userId", input)} />
 
                 <button class='bg-dark color-light border-light border-solid border-1px px-4 py-2 rounded text-lg
                 hover:bg-light hover:text-dark hover:border-dark transition duration-100' onClick={() => setIsAddEntryModalOpen(true)}>Add entry</button>
             </div>
 
-            <Show when={currentSelectData.user_id && !schedules.loading}>
+            <Show when={currentSelection.userId && !schedules.loading}>
                 <For each={Object.entries(schedules() ?? {})}>
                 {([start_of_week, week_data]) => (
                     <div class='mx-auto mb-30px w-50vw bg-offDark px-5 py-4 rounded font-norm' 
@@ -143,7 +143,7 @@ const Admin: Component = () => {
                             <Show when={hoveredWeek() === start_of_week}>
                                 <button class="ml-2 i-mdi:edit-box-outline w-7 h-7" 
                                 onClick={() => openUpdateWeekStartModal(start_of_week)}></button>
-                                <button class="i-mdi:trash-can w-7 h-7" onClick={handleDeleteUserWeekStartDate}></button>
+                                <button class="i-mdi:trash-can w-7 h-7" onClick={() => handleDeleteUserWeekStartDate({weekStartDate: start_of_week})}></button>
                             </Show>
                         </h1>
                         <div>
@@ -154,8 +154,8 @@ const Admin: Component = () => {
                                     <div class='flex gap-10 border-solid border-light border-1px rounded px-5 py-5 mb-5'>
                                         <For each={schedule_entries}>
                                         {(entry) => (
-                                            <TimeSlot id={entry.ID} clockIn={entry.ClockIn} clockOut={entry.ClockOut} openModal={() => setIsTimeSlotModalOpen(true)}
-                                            editFn={handleTimeSlotEdit}/>
+                                            <TimeSlot openModal={() => setIsTimeSlotModalOpen(true)} getStateFn={() => entry}
+                                            updateFn={handleTimeSlotEdit}/>
                                         )}
                                         </For>
                                     </div>
@@ -168,14 +168,22 @@ const Admin: Component = () => {
                 </For>
             </Show>
 
-            <EditTimeSlot isModalOpen={isTimeSlotModalOpen} closeModal={() => setIsTimeSlotModalOpen(false)} handleUpdate={handleUpdateExistingSchedule} handleDelete={handleDeleteExistingSchedule} 
-            setFn={setCurrentSelectData} getFn={() => currentSelectData}/>
+            <EditTimeSlotModal isModalOpen={isTimeSlotModalOpen} closeModal={() => setIsTimeSlotModalOpen(false)} getStateFn={() => ({
+                id: currentSelection.entryId,
+                clockIn: currentSelection.clockIn,
+                clockOut: currentSelection.clockOut
+            })}
+            handleUpdate={(data: UpdateScheduleData) => handleUpdateExistingSchedule(data)}
+            handleDelete={(data: DeleteScheduleData) => handleDeleteExistingSchedule(data)}/>
 
-            <AddEntry isModalOpen={isAddEntryModalOpen} closeModal={() => setIsAddEntryModalOpen(false)} handleAdd={handleAddNewSchedule}
-            defaultUser={currentSelectData.user_id}/>
+            <AddEntryModal isModalOpen={isAddEntryModalOpen} closeModal={() => setIsAddEntryModalOpen(false)} 
+            getStateFn={() => currentSelection}
+            targetUser={currentSelection.userId ?? ""}
+            handleAdd={(data: NewScheduleData, userId: string) => handleAddNewSchedule(data, userId)}/>
 
-            <UpdateWeekStart isModalOpen={isUpdateWeekStartModalOpen} closeModal={() => setIsUpdateWeekStartModalOpen(false)} 
-            handleUpdateWeekStart={handleUpdateUserWeekStart} previousWeekStart={hoveredWeek() ?? ""} />
+            <UpdateWeekStartModal isModalOpen={isUpdateWeekStartModalOpen} closeModal={() => setIsUpdateWeekStartModalOpen(false)} 
+            getStateFn={() => (hoveredWeek() || "2024-01-01")}
+            handleUpdateWeekStart={(data) => handleUpdateUserWeekStart(data)} />
 
         </>
     );

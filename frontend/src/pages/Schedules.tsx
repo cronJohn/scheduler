@@ -52,7 +52,7 @@ const Schedules: Component = () => {
                 <Match when={fetchData()}>
                     <div class="nm w-30vw mx-auto my-12 pb-8 flex flex-col items-center font-code">
                         <h1 class="text-3xl mt-8 mb-1rem text-center">Schedules for {id()}</h1>
-                        <For each={Object.entries(fetchData())}>
+                        <For each={Object.entries(fetchData() ?? {})}>
                             {([week_start_date, schedules]) => (
                              <div class='nm w-70% bg-slightDark px-5 py-2 mb-8 rounded-lg shadow-md'>
                                 <h2 class='font-norm text-2xl text-center mb-2'>Week of {week_start_date}</h2>

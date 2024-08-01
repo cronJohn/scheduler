@@ -1,4 +1,4 @@
-import { ScheduleData, ScheduleRequest, UserResponse } from "./types";
+import { UserResponse, WeekSchedule } from "./types";
 
 const logResponse = (response: Response) => {
     if (!response.ok) {
@@ -18,9 +18,9 @@ export const fetchUsers = async (): Promise<UserResponse[]> => {
     }
 }
 
-export const fetchSchedules = async (id: string): Promise<ScheduleData> => {
+export const fetchSchedules = async (user_id: string): Promise<WeekSchedule> => {
     try {
-        const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/${id}/schedule`);
+        const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/${user_id}/schedule`);
         if (response.ok) {
             return response.json();
         } return {};
@@ -30,61 +30,82 @@ export const fetchSchedules = async (id: string): Promise<ScheduleData> => {
     }
 }
 
-export const createNewSchedule = async (input: ScheduleRequest) => {
-    const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/schedule`, {
+export type NewScheduleData = {
+    weekStartDate: string;
+    dayOfWeek: number;
+    clockIn: string;
+    clockOut: string;
+}
+export const createNewSchedule = async (user_id: string, data: NewScheduleData) => {
+    const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/${user_id}/schedule`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(input),
+        body: JSON.stringify(data),
     });
 
     logResponse(response);
 }
 
-export const updateExistingSchedule = async (input: ScheduleRequest) => {
-    const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/${input.user_id}/schedule`, {
+export type UpdateScheduleData = {
+    entryId: number;
+    clockIn: string;
+    clockOut: string;
+}
+export const updateExistingSchedule = async (data: UpdateScheduleData) => {
+    const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/schedule`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(input),
+        body: JSON.stringify(data),
     });
 
     logResponse(response);
 }
 
-export const updateUserWeekStartDate = async (input: ScheduleRequest) => {
-    const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/${input.user_id}/weekstart`, {
+export type UpdateWeekStartData = {
+    oldWeekStartDate: string;
+    newWeekStartDate?: string;
+}
+export const updateUserWeekStartDate = async (user_id: string, data: UpdateWeekStartData) => {
+    const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/${user_id}/weekstart`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(input),
+        body: JSON.stringify(data),
     });
 
     logResponse(response);
 }
 
-export const deleteExistingSchedule = async (input: ScheduleRequest) => {
-    const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/${input.user_id}/schedule`, {
+export type DeleteScheduleData = {
+    entryId: number;
+}
+export const deleteExistingSchedule = async (data: DeleteScheduleData) => {
+    const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/schedule`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(input),
+        body: JSON.stringify(data),
     });
 
     logResponse(response);
 }
 
-export const deleteUserWeekStartDate = async (input: ScheduleRequest) => {
-    const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/${input.user_id}/weekstart`, {
+export type DeleteUserWeekStartDateData = {
+    weekStartDate: string;
+}
+export const deleteUserWeekStartDate = async (user_id: string, data: DeleteUserWeekStartDateData) => {
+    const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/${user_id}/weekstart`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(input),
+        body: JSON.stringify(data),
     });
 
     logResponse(response);

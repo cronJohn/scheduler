@@ -12,12 +12,12 @@ import (
 )
 
 type (
-	DataMap      map[string]DayOfWeekMap
-	DayOfWeekMap map[int64][]ClockInOut
-	ClockInOut   struct {
-		ID       int64
-		ClockIn  string
-		ClockOut string
+	dataMap      map[string]dayOfWeekMap
+	dayOfWeekMap map[int64][]timeEntry
+	timeEntry    struct {
+		Id       int64  `json:"id"`
+		ClockIn  string `json:"clockIn"`
+		ClockOut string `json:"clockOut"`
 	}
 )
 
@@ -43,7 +43,7 @@ func (h *Handler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-func (h *Handler) GetUserSchedule(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetUserSchedules(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -60,22 +60,22 @@ func (h *Handler) GetUserSchedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dataMap := make(DataMap)
+	dataMap := make(dataMap)
 
 	// Populate the map
 	for _, sch := range schedules {
 		if _, exists := dataMap[sch.WeekStartDate]; !exists {
-			dataMap[sch.WeekStartDate] = make(DayOfWeekMap)
+			dataMap[sch.WeekStartDate] = make(dayOfWeekMap)
 		}
 
 		if _, exists := dataMap[sch.WeekStartDate][sch.DayOfWeek]; !exists {
-			dataMap[sch.WeekStartDate][sch.DayOfWeek] = []ClockInOut{}
+			dataMap[sch.WeekStartDate][sch.DayOfWeek] = []timeEntry{}
 		}
 
 		dataMap[sch.WeekStartDate][sch.DayOfWeek] = append(
 			dataMap[sch.WeekStartDate][sch.DayOfWeek],
-			ClockInOut{
-				ID:       sch.ID,
+			timeEntry{
+				Id:       sch.ID,
 				ClockIn:  sch.ClockIn,
 				ClockOut: sch.ClockOut,
 			},
@@ -93,21 +93,16 @@ func (h *Handler) GetUserSchedule(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-type ScheduleRequest struct {
-	UserID           string `json:"user_id"`
-	EntryID          int64  `json:"id"`
-	WeekStartDate    string `json:"week_start_date"`
-	OldWeekStartDate string `json:"old_week_start_date"`
-	DayOfWeek        int64  `json:"day_of_week"`
-	ClockIn          string `json:"clock_in"`
-	ClockOut         string `json:"clock_out"`
-}
-
 func (h *Handler) CreateUserSchedule(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	var req ScheduleRequest
+	var req struct {
+		WeekStartDate string `json:"weekStartDate"`
+		DayOfWeek     int64  `json:"dayOfWeek"`
+		ClockIn       string `json:"clockIn"`
+		ClockOut      string `json:"clockOut"`
+	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Error().Msgf("Failed to decode request body: %v", err)
@@ -116,7 +111,7 @@ func (h *Handler) CreateUserSchedule(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := h.db.CreateSchedule(ctx, sqlc.CreateScheduleParams{
-		UserID:        req.UserID,
+		UserID:        r.PathValue("id"),
 		WeekStartDate: req.WeekStartDate,
 		DayOfWeek:     req.DayOfWeek,
 		ClockIn:       req.ClockIn,
@@ -134,7 +129,11 @@ func (h *Handler) UpdateUserSchedule(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	var req ScheduleRequest
+	var req struct {
+		EntryID  int64  `json:"entryId"`
+		ClockIn  string `json:"clockIn"`
+		ClockOut string `json:"clockOut"`
+	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Error().Msgf("Failed to decode request body: %v", err)
@@ -159,7 +158,10 @@ func (h *Handler) UpdateUserWeekStart(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	var req ScheduleRequest
+	var req struct {
+		OldWeekStartDate string `json:"oldWeekStartDate"`
+		NewWeekStartDate string `json:"newWeekStartDate"`
+	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Error().Msgf("Failed to decode request body: %v", err)
@@ -168,8 +170,8 @@ func (h *Handler) UpdateUserWeekStart(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := h.db.UpdateWeekStartDateByUserID(ctx, sqlc.UpdateWeekStartDateByUserIDParams{
-		WeekStartDate:   req.WeekStartDate,
-		UserID:          req.UserID,
+		WeekStartDate:   req.NewWeekStartDate,
+		UserID:          r.PathValue("id"),
 		WeekStartDate_2: req.OldWeekStartDate,
 	})
 	if err != nil {
@@ -184,7 +186,9 @@ func (h *Handler) DeleteUserSchedule(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	var req ScheduleRequest
+	var req struct {
+		EntryID int64 `json:"entryId"`
+	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Error().Msgf("Failed to decode request body: %v", err)
@@ -205,7 +209,9 @@ func (h *Handler) DeleteUserWeekStart(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	var req ScheduleRequest
+	var req struct {
+		WeekStartDate string `json:"weekStartDate"`
+	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Error().Msgf("Failed to decode request body: %v", err)
@@ -216,7 +222,7 @@ func (h *Handler) DeleteUserWeekStart(w http.ResponseWriter, r *http.Request) {
 	err := h.db.DeleteSchedulesByIdAndWeekStartDate(
 		ctx,
 		sqlc.DeleteSchedulesByIdAndWeekStartDateParams{
-			UserID:        req.UserID,
+			UserID:        r.PathValue("id"),
 			WeekStartDate: req.WeekStartDate,
 		},
 	)
