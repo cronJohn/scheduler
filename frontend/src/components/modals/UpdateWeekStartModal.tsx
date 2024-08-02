@@ -10,7 +10,7 @@ export const UpdateWeekStartModal: Component<{
 }> = (props) => {
     const [newWeekStartDate, setNewWeekStartDate] = createSignal("");
     return <Modal isOpen={props.isModalOpen()} onCloseRequest={props.closeModal} closeOnOutsideClick overlayStyle={{ "background-color": 'rgba(14, 14, 14, 0.7)' }}>
-        <h2 class='font-norm font-medium text-2xl text-light text-center'>Update Week Start</h2>
+        <h2 class='font-norm font-medium text-3xl text-light text-center'>Update Week Start</h2>
         <section class="flex flex-col justify-center items-center gap-5">
             <input
                 id="week_start_date"

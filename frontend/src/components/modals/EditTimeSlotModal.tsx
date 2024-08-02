@@ -27,7 +27,7 @@ export const EditTimeSlotModal: Component<{
     })
 
     return <Modal isOpen={props.isModalOpen()} onCloseRequest={props.closeModal} closeOnOutsideClick overlayStyle={{ "background-color": 'rgba(14, 14, 14, 0.7)' }}>
-        <h2 class='font-norm font-medium text-2xl text-light text-center'>Edit Time Slot</h2>
+        <h2 class='font-norm font-medium text-3xl text-light text-center'>Edit Time Slot</h2>
         <div class='flex font-code text-lg justify-center text-light mb-4'>
             <label for='start' class='text-center my-auto'>Start:</label>
             <input id='start' type="time" value={fmtMT(parseInt(state.clockIn))} 

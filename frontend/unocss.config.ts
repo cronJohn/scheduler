@@ -18,6 +18,12 @@ export default defineConfig({
       'background': '#0E0E0E',
       'box-shadow': '10px 10px 20px #060606, -10px -10px 20px #161616',
     }],
+    ['iw', { // item width
+      'width': '175px',
+    }],
+    ['sw', { // section width
+        width: '75%',
+    }]
   ],
   theme: {
     colors: {
