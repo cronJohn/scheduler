@@ -2,6 +2,7 @@ body {
   background-color: #121212;
   color: #eeeeee;
   min-height: 100vh;
+  color-scheme: dark;
 }
 
 button, input{

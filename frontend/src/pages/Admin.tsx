@@ -134,7 +134,7 @@ const Admin: Component = () => {
             <Show when={currentSelection.userId && !schedules.loading}>
                 <For each={Object.entries(schedules() ?? {})}>
                 {([start_of_week, week_data]) => (
-                    <div class='mx-auto mb-30px w-50vw bg-offDark px-5 py-4 rounded font-norm' 
+                    <div class='mx-auto mb-30px w-45vw bg-offDark px-5 py-4 rounded font-norm'
                     onMouseEnter={() => !isUpdateWeekStartModalOpen() && setHoveredWeek(start_of_week)}
                     onMouseLeave={() => !isUpdateWeekStartModalOpen() && setHoveredWeek(null)}
                     >
@@ -151,11 +151,13 @@ const Admin: Component = () => {
                             {([day_of_week, schedule_entries]) => (
                                 <div class='ml-25px'>
                                     <h2 class='font-medium my-0'>{itd(Number(day_of_week))}</h2>
-                                    <div class='flex gap-10 border-solid border-light border-1px rounded px-5 py-5 mb-5'>
+                                    <div class='flex gap-10 overflow-x-scroll border-solid border-light border-1px rounded px-5 py-5 mb-5'>
                                         <For each={schedule_entries}>
                                         {(entry) => (
-                                            <TimeSlot openModal={() => setIsTimeSlotModalOpen(true)} getStateFn={() => entry}
-                                            updateFn={handleTimeSlotEdit}/>
+                                            <div class='flex-shrink-0 '>
+                                                <TimeSlot openModal={() => setIsTimeSlotModalOpen(true)} getStateFn={() => entry}
+                                                updateFn={handleTimeSlotEdit}/>
+                                            </div>
                                         )}
                                         </For>
                                     </div>

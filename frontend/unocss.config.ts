@@ -22,8 +22,8 @@ export default defineConfig({
       'width': '175px',
     }],
     ['sw', { // section width
-        width: '75%',
-    }]
+        'width': '75%',
+    }],
   ],
   theme: {
     colors: {
