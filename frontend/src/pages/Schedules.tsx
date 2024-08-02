@@ -3,6 +3,7 @@ import { Spinner, SpinnerType } from 'solid-spinner';
 import Modal from '@lutaok/solid-modal';
 import { itd, mtr } from '../utils/conv';
 import { fetchSchedules } from '../utils/api';
+import { NavBar } from '../components/NavBar';
 
 let inputBuf: string = "";
 
@@ -30,7 +31,8 @@ const Schedules: Component = () => {
 
     return (
         <div>
-            <div class='nm flex flex-col w-30vw mx-auto mt-30vh p-3rem flex-col items-center justify-center'>
+            <NavBar />
+            <div class='nm flex flex-col w-30vw mx-auto mt-20vh p-3rem flex-col items-center justify-center'>
                 <input ref={setInputEl} autofocus type="text" name="id" class='py-2 px-4 text-size-1.5rem rounded bg-offDark text-light' 
                 placeholder='Enter ID' onKeyPress={(e) => e.key === 'Enter' && findUser()}/>
                 <button type="submit" class="bg-offDark text-primary font-semibold mt-4 py-3 px-5 text-size-1.5rem rounded hover:bg-opacity-75"

@@ -1,4 +1,4 @@
-import { For, Show, createEffect, createResource, createSignal, type Component } from 'solid-js';
+import { For, Show, createResource, createSignal, type Component } from 'solid-js';
 import { fetchSchedules, updateExistingSchedule, deleteExistingSchedule, createNewSchedule, deleteUserWeekStartDate, updateUserWeekStartDate, NewScheduleData, UpdateScheduleData, UpdateWeekStartData, DeleteScheduleData, DeleteUserWeekStartDateData } from '../utils/api';
 import { fmtDate, itd } from '../utils/conv';
 import { TimeSlot } from '../components/TimeSlot';
@@ -9,6 +9,7 @@ import { AddEntryModal } from '../components/modals/AddEntryModal';
 import { UpdateWeekStartModal } from '../components/modals/UpdateWeekStartModal';
 import { ActiveState, DaySchedule, TimeEntry } from '../utils/types';
 import { getDateISO } from '../utils/helper';
+import { NavBar } from '../components/NavBar';
 
 const Admin: Component = () => {
     const [isTimeSlotModalOpen, setIsTimeSlotModalOpen] = createSignal<boolean>(false);
@@ -124,6 +125,7 @@ const Admin: Component = () => {
 
     return (
         <>
+            <NavBar />
             <div class='mt-20 mb-10 w-100wv flex gap-4 justify-center'>
                 <label for="user_id" class="text-2xl font-code my-auto">User ID: </label>
                 <SelectUser setFn={(input: string) => setCurrentSelection("userId", input)} />
