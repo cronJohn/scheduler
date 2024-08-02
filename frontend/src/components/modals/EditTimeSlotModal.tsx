@@ -41,10 +41,10 @@ export const EditTimeSlotModal: Component<{
             class='bg-gray-500/20 ml-2 py-1.5 px-1 rounded font-code text-light text-sm'/>
         </div>
 
-        <div class="flex mt-8 gap-4 justify-center pb-4">
-            <button class="bg-blue text-sm font-code rounded px-4 py-2" 
+        <div class="flex mt-8 gap-4 text-dark justify-center pb-4">
+            <button class="bg-blue text-sm text-dark font-code rounded px-4 py-2" 
             onClick={() => props.handleUpdate({entryId: state.id, clockIn: state.clockIn, clockOut: state.clockOut})}>Update</button>
-            <button class="bg-red text-sm font-code rounded px-4 py-2" onClick={() => props.handleDelete({entryId: state.id})}>Delete</button>
+            <button class="bg-red text-sm text-dark font-code rounded px-4 py-2" onClick={() => props.handleDelete({entryId: state.id})}>Delete</button>
         </div>
     </Modal>
 }

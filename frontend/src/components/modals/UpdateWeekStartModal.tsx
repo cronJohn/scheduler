@@ -19,7 +19,7 @@ export const UpdateWeekStartModal: Component<{
                 onInput={(e) => setNewWeekStartDate(e.currentTarget.value)}
                 class="py-2 px-4 border-2 border-solid border-primary rounded bg-offDark text-2xl text-white"
             />
-            <button class="bg-blue text-4 font-code rounded px-4 py-2" 
+            <button class="bg-blue text-4 text-dark font-code rounded px-4 py-2" 
             onClick={() => props.handleUpdateWeekStart({oldWeekStartDate: props.getStateFn(), newWeekStartDate: newWeekStartDate()})}>Update</button>
         </section>
     </Modal>

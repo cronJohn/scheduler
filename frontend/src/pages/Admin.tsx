@@ -1,4 +1,4 @@
-import { For, Show, createResource, createSignal, type Component } from 'solid-js';
+import { For, Show, createEffect, createResource, createSignal, type Component } from 'solid-js';
 import { fetchSchedules, updateExistingSchedule, deleteExistingSchedule, createNewSchedule, deleteUserWeekStartDate, updateUserWeekStartDate, NewScheduleData, UpdateScheduleData, UpdateWeekStartData, DeleteScheduleData, DeleteUserWeekStartDateData } from '../utils/api';
 import { itd } from '../utils/conv';
 import { TimeSlot } from '../components/TimeSlot';
@@ -8,6 +8,7 @@ import { SelectUser } from '../components/SelectUser';
 import { AddEntryModal } from '../components/modals/AddEntryModal';
 import { UpdateWeekStartModal } from '../components/modals/UpdateWeekStartModal';
 import { ActiveState, DaySchedule, TimeEntry } from '../utils/types';
+import { getDateISO } from '../utils/helper';
 
 const Admin: Component = () => {
     const [isTimeSlotModalOpen, setIsTimeSlotModalOpen] = createSignal<boolean>(false);
@@ -18,7 +19,7 @@ const Admin: Component = () => {
     const [currentSelection, setCurrentSelection] = createStore<ActiveState>({
         userId: null,
         entryId: 0,
-        weekStartDate: "2024-01-01",
+        weekStartDate: getDateISO(),
         dayOfWeek: 0,
         clockIn: "11:00",
         clockOut: "12:00",
@@ -141,9 +142,13 @@ const Admin: Component = () => {
                         <h1 class='mb-2 mt-0'><span class='underline underline-offset-5'>Week of: {start_of_week}</span>
                             <span class='text-lg font-light ml-10px'>(Total Hours: {calculateTotalWeekHours(week_data)})</span>
                             <Show when={hoveredWeek() === start_of_week}>
-                                <button class="ml-2 i-mdi:edit-box-outline w-7 h-7" 
+                                <button class="ml-2 i-mdi:add-circle-outline w-7 h-7" onClick={() => {
+                                    setCurrentSelection("weekStartDate", start_of_week);
+                                    setIsAddEntryModalOpen(true);
+                                }}></button>
+                                <button class="i-mdi:edit-box-outline w-7 h-7" 
                                 onClick={() => openUpdateWeekStartModal(start_of_week)}></button>
-                                <button class="i-mdi:trash-can w-7 h-7" onClick={() => handleDeleteUserWeekStartDate({weekStartDate: start_of_week})}></button>
+                                <button class="i-mdi:trash-can-outline w-7 h-7" onClick={() => handleDeleteUserWeekStartDate({weekStartDate: start_of_week})}></button>
                             </Show>
                         </h1>
                         <div>

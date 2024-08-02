@@ -3,7 +3,6 @@ import { Component, createEffect, createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
 import { SelectUser } from "../SelectUser";
 import { NewScheduleData } from "../../utils/api";
-import { getDateISO } from "../../utils/helper";
 
 export const AddEntryModal: Component<{
     isModalOpen: () => boolean;
@@ -14,7 +13,7 @@ export const AddEntryModal: Component<{
 }> = (props) => {
     const [state, setState] = createStore<NewScheduleData>(
         {
-            weekStartDate: getDateISO(),
+            weekStartDate: props.getStateFn().weekStartDate,
             dayOfWeek: props.getStateFn().dayOfWeek,
             clockIn: props.getStateFn().clockIn,
             clockOut: props.getStateFn().clockOut
@@ -26,6 +25,10 @@ export const AddEntryModal: Component<{
         if (isSelectDisabled()){
             setCurrentUser(props.targetUser);
         } else {setCurrentUser(buf)}
+    })
+
+    createEffect(() => {
+        setState("weekStartDate", props.getStateFn().weekStartDate);
     })
 
     const [currentUser, setCurrentUser] = createSignal<string>("");
@@ -106,7 +109,7 @@ export const AddEntryModal: Component<{
                         class="py-2 px-4 border-2 border-solid border-primary rounded bg-offDark text-2xl text-white text-center iw"
                     />
                 </section>
-                <button class="bg-blue text-5 font-code rounded mt-4 px-4 py-2 w-100px" onClick={() => props.handleAdd(state, currentUser())}>Add</button>
+                <button class="bg-blue text-5 text-dark font-code rounded mt-4 px-4 py-2 w-100px" onClick={() => props.handleAdd(state, currentUser())}>Add</button>
             </div>
         </div>
     </Modal>
