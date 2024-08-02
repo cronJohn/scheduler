@@ -29,3 +29,11 @@ export const fmtMT = (hours: number) => {
 
   return `${formattedHours}:00`;
 }
+
+export const fmtDate = (date: string) => {
+    return new Date(date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    });
+}

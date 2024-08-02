@@ -1,6 +1,6 @@
 import { For, Show, createEffect, createResource, createSignal, type Component } from 'solid-js';
 import { fetchSchedules, updateExistingSchedule, deleteExistingSchedule, createNewSchedule, deleteUserWeekStartDate, updateUserWeekStartDate, NewScheduleData, UpdateScheduleData, UpdateWeekStartData, DeleteScheduleData, DeleteUserWeekStartDateData } from '../utils/api';
-import { itd } from '../utils/conv';
+import { fmtDate, itd } from '../utils/conv';
 import { TimeSlot } from '../components/TimeSlot';
 import { createStore, produce } from 'solid-js/store';
 import { EditTimeSlotModal } from '../components/modals/EditTimeSlotModal';
@@ -139,7 +139,7 @@ const Admin: Component = () => {
                     onMouseEnter={() => !isUpdateWeekStartModalOpen() && setHoveredWeek(start_of_week)}
                     onMouseLeave={() => !isUpdateWeekStartModalOpen() && setHoveredWeek(null)}
                     >
-                        <h1 class='mb-2 mt-0'><span class='underline underline-offset-5'>Week of: {start_of_week}</span>
+                        <h1 class='mb-2 mt-0'><span class='underline underline-offset-5'>Week of: {fmtDate(start_of_week)}</span>
                             <span class='text-lg font-light ml-10px'>(Total Hours: {calculateTotalWeekHours(week_data)})</span>
                             <Show when={hoveredWeek() === start_of_week}>
                                 <button class="ml-2 i-mdi:add-circle-outline w-7 h-7" onClick={() => {
