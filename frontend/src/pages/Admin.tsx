@@ -1,5 +1,5 @@
 import { For, Show, createResource, createSignal, type Component } from 'solid-js';
-import { fetchSchedules, updateExistingSchedule, deleteExistingSchedule, createNewSchedule, deleteUserWeekStartDate, updateUserWeekStartDate, NewScheduleData, UpdateScheduleData, UpdateWeekStartData, DeleteScheduleData, DeleteUserWeekStartDateData } from '../utils/api';
+import { fetchUserSchedules, updateExistingSchedule, deleteExistingSchedule, createNewSchedule, deleteUserWeekStartDate, updateUserWeekStartDate, NewScheduleData, UpdateScheduleData, UpdateWeekStartData, DeleteScheduleData, DeleteUserWeekStartDateData } from '../utils/api';
 import { fmtDate, itd } from '../utils/conv';
 import { TimeSlot } from '../components/TimeSlot';
 import { createStore, produce } from 'solid-js/store';
@@ -26,7 +26,7 @@ const Admin: Component = () => {
         clockOut: "12:00",
     });
 
-    const [schedules, { refetch }] = createResource(() => currentSelection.userId, fetchSchedules);
+    const [schedules, { refetch }] = createResource(() => currentSelection.userId, fetchUserSchedules);
 
     const openUpdateWeekStartModal = (weekStart: string) => {
         setIsUpdateWeekStartModalOpen(true);

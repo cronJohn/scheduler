@@ -18,3 +18,9 @@ a {
 button {
     cursor: pointer;
 }
+
+@media print {
+  body {
+    background-color: white;
+  }
+}

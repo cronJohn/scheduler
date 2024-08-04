@@ -18,7 +18,7 @@ export const fetchUsers = async (): Promise<UserResponse[]> => {
     }
 }
 
-export const fetchSchedules = async (user_id: string): Promise<WeekSchedule> => {
+export const fetchUserSchedules = async (user_id: string): Promise<WeekSchedule> => {
     try {
         const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/${user_id}/schedule`);
         if (response.ok) {
@@ -26,8 +26,32 @@ export const fetchSchedules = async (user_id: string): Promise<WeekSchedule> => 
         } return {};
     } catch (error) {
         console.error(error);
-        return {}
+        return {};
     }
+}
+
+export type WeekScheduleData = {
+    id: number;
+    userId: string;
+    name: string;
+    role: string;
+    dayOfWeek: number;
+    clockIn: string;
+    clockOut: string;
+}
+
+export const fetchWeekSchedules = async (week: string | undefined): Promise<WeekScheduleData[]> => {
+    if (!week) return [];
+    try {
+        const response = await fetch(`${import.meta.env.VITE_SERV}/api/schedule/${week}`);
+        if (response.ok) {
+            return response.json();
+        } return [];
+    } catch (error) {
+        console.error(error);
+        return [];
+    }
+    
 }
 
 export type NewScheduleData = {

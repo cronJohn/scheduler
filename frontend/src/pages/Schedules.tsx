@@ -2,14 +2,14 @@ import { For, Match, Show, Switch, createResource, createSignal, onMount, type C
 import { Spinner, SpinnerType } from 'solid-spinner';
 import Modal from '@lutaok/solid-modal';
 import { itd, mtr } from '../utils/conv';
-import { fetchSchedules } from '../utils/api';
+import { fetchUserSchedules } from '../utils/api';
 import { NavBar } from '../components/NavBar';
 
 let inputBuf: string = "";
 
 const Schedules: Component = () => {
     const [id, setId] = createSignal<string>();
-    const [fetchData] = createResource(id, fetchSchedules);
+    const [fetchData] = createResource(id, fetchUserSchedules);
 
     const [inputEl, setInputEl] = createSignal<HTMLInputElement>();
 

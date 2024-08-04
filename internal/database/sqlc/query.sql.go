@@ -129,6 +129,54 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 	return items, nil
 }
 
+const getWeekSchedules = `-- name: GetWeekSchedules :many
+SELECT schedules.id, schedules.user_id as "userId", users.name, users.role, schedules.day_of_week as "dayOfWeek", schedules.clock_in as "clockIn", schedules.clock_out as "clockOut"
+FROM schedules
+JOIN users ON schedules.user_id = users.id
+WHERE schedules.week_start_date = ?
+`
+
+type GetWeekSchedulesRow struct {
+	ID        int64  `json:"id"`
+	UserId    string `json:"userId"`
+	Name      string `json:"name"`
+	Role      string `json:"role"`
+	DayOfWeek int64  `json:"dayOfWeek"`
+	ClockIn   string `json:"clockIn"`
+	ClockOut  string `json:"clockOut"`
+}
+
+func (q *Queries) GetWeekSchedules(ctx context.Context, weekStartDate string) ([]GetWeekSchedulesRow, error) {
+	rows, err := q.db.QueryContext(ctx, getWeekSchedules, weekStartDate)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetWeekSchedulesRow
+	for rows.Next() {
+		var i GetWeekSchedulesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserId,
+			&i.Name,
+			&i.Role,
+			&i.DayOfWeek,
+			&i.ClockIn,
+			&i.ClockOut,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateScheduleTimes = `-- name: UpdateScheduleTimes :exec
 UPDATE schedules
 SET clock_in = ?, clock_out = ?

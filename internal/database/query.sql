@@ -7,6 +7,12 @@ SELECT id, week_start_date, day_of_week, clock_in, clock_out
 FROM schedules
 WHERE user_id = ?;
 
+-- name: GetWeekSchedules :many
+SELECT schedules.id, schedules.user_id as "userId", users.name, users.role, schedules.day_of_week as "dayOfWeek", schedules.clock_in as "clockIn", schedules.clock_out as "clockOut"
+FROM schedules
+JOIN users ON schedules.user_id = users.id
+WHERE schedules.week_start_date = ?;
+
 -- name: CreateSchedule :exec
 INSERT INTO schedules (user_id, week_start_date, day_of_week, clock_in, clock_out)
 VALUES (?, ?, ?, ?, ?);

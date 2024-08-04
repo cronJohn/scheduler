@@ -6,7 +6,7 @@ export const NavBar: Component = () => {
             <a href="/" class="nm py-2 px-4 rounded hover:bg-light hover:text-dark transition">Home</a>
             <a href="/schedules" class="nm py-2 px-4 rounded hover:bg-light hover:text-dark transition">Schedules</a>
             <a href="/admin" class="nm py-2 px-4 rounded hover:bg-light hover:text-dark transition">Admin</a>
-            <a href="/lineup" class="nm py-2 px-4 rounded hover:bg-light hover:text-dark transition">Overview</a>
+            <a href="/overview" class="nm py-2 px-4 rounded hover:bg-light hover:text-dark transition">Overview</a>
         </div>
     );
 };

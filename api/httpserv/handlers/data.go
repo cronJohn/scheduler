@@ -93,6 +93,28 @@ func (h *Handler) GetUserSchedules(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
+func (h *Handler) GetWeekSchedules(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	schedules, err := h.db.GetWeekSchedules(ctx, r.PathValue("week"))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Error().Msgf("Failed to get schedules: %v", err)
+		return
+	}
+
+	data, err := json.Marshal(schedules)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Error().Msgf("Failed to marshal schedules: %v", err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+}
+
 func (h *Handler) CreateUserSchedule(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
