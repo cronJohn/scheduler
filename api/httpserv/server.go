@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/cronJohn/scheduler/api/httpserv/handlers"
 	"github.com/cronJohn/scheduler/api/httpserv/middleware"
 )
@@ -61,7 +63,15 @@ func (s *Server) Start() error {
 		http.StripPrefix("/assets/", http.FileServer(http.Dir("frontend/dist/assets/"))),
 	)
 
-	return s.server.ListenAndServe()
+	tlsCert := os.Getenv("TLS_CERT")
+	tlsKey := os.Getenv("TLS_KEY")
+	if tlsCert != "" && tlsKey != "" {
+		log.Info().Msg("Starting server with TLS...")
+		return s.server.ListenAndServeTLS(tlsCert, tlsKey)
+	} else {
+		log.Info().Msg("Starting server without TLS...")
+		return s.server.ListenAndServe()
+	}
 }
 
 func (s *Server) Stop(ctx context.Context) error {
