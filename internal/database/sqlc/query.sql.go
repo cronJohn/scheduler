@@ -10,25 +10,23 @@ import (
 )
 
 const createSchedule = `-- name: CreateSchedule :exec
-INSERT INTO schedules (user_id, week_start_date, day_of_week, clock_in, clock_out)
-VALUES (?, ?, ?, ?, ?)
+INSERT INTO schedules (userId, day, clockIn, clockOut)
+VALUES (?, ?, ?, ?)
 `
 
 type CreateScheduleParams struct {
-	UserID        string `json:"user_id"`
-	WeekStartDate string `json:"week_start_date"`
-	DayOfWeek     int64  `json:"day_of_week"`
-	ClockIn       string `json:"clock_in"`
-	ClockOut      string `json:"clock_out"`
+	Userid   string `json:"userid"`
+	Day      string `json:"day"`
+	Clockin  string `json:"clockin"`
+	Clockout string `json:"clockout"`
 }
 
 func (q *Queries) CreateSchedule(ctx context.Context, arg CreateScheduleParams) error {
 	_, err := q.db.ExecContext(ctx, createSchedule,
-		arg.UserID,
-		arg.WeekStartDate,
-		arg.DayOfWeek,
-		arg.ClockIn,
-		arg.ClockOut,
+		arg.Userid,
+		arg.Day,
+		arg.Clockin,
+		arg.Clockout,
 	)
 	return err
 }
@@ -43,37 +41,68 @@ func (q *Queries) DeleteSchedule(ctx context.Context, id int64) error {
 	return err
 }
 
-const deleteSchedulesByIdAndWeekStartDate = `-- name: DeleteSchedulesByIdAndWeekStartDate :exec
-DELETE FROM schedules
-WHERE user_id = ? AND week_start_date = ?
+const getAllSchedules = `-- name: GetAllSchedules :many
+SELECT users.name, users.role, schedules.id, schedules.userId as "userId", schedules.day, schedules.clockIn as "clockIn", schedules.clockOut as "clockOut"
+FROM schedules
+JOIN users ON schedules.userId= users.id
 `
 
-type DeleteSchedulesByIdAndWeekStartDateParams struct {
-	UserID        string `json:"user_id"`
-	WeekStartDate string `json:"week_start_date"`
+type GetAllSchedulesRow struct {
+	Name     string `json:"name"`
+	Role     string `json:"role"`
+	ID       int64  `json:"id"`
+	UserId   string `json:"userId"`
+	Day      string `json:"day"`
+	ClockIn  string `json:"clockIn"`
+	ClockOut string `json:"clockOut"`
 }
 
-func (q *Queries) DeleteSchedulesByIdAndWeekStartDate(ctx context.Context, arg DeleteSchedulesByIdAndWeekStartDateParams) error {
-	_, err := q.db.ExecContext(ctx, deleteSchedulesByIdAndWeekStartDate, arg.UserID, arg.WeekStartDate)
-	return err
+func (q *Queries) GetAllSchedules(ctx context.Context) ([]GetAllSchedulesRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAllSchedules)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAllSchedulesRow
+	for rows.Next() {
+		var i GetAllSchedulesRow
+		if err := rows.Scan(
+			&i.Name,
+			&i.Role,
+			&i.ID,
+			&i.UserId,
+			&i.Day,
+			&i.ClockIn,
+			&i.ClockOut,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getSchedulesByUserID = `-- name: GetSchedulesByUserID :many
-SELECT id, week_start_date, day_of_week, clock_in, clock_out
+SELECT id, day, clockIn, clockOut
 FROM schedules
-WHERE user_id = ?
+WHERE userId = ?
 `
 
 type GetSchedulesByUserIDRow struct {
-	ID            int64  `json:"id"`
-	WeekStartDate string `json:"week_start_date"`
-	DayOfWeek     int64  `json:"day_of_week"`
-	ClockIn       string `json:"clock_in"`
-	ClockOut      string `json:"clock_out"`
+	ID       int64  `json:"id"`
+	Day      string `json:"day"`
+	Clockin  string `json:"clockin"`
+	Clockout string `json:"clockout"`
 }
 
-func (q *Queries) GetSchedulesByUserID(ctx context.Context, userID string) ([]GetSchedulesByUserIDRow, error) {
-	rows, err := q.db.QueryContext(ctx, getSchedulesByUserID, userID)
+func (q *Queries) GetSchedulesByUserID(ctx context.Context, userid string) ([]GetSchedulesByUserIDRow, error) {
+	rows, err := q.db.QueryContext(ctx, getSchedulesByUserID, userid)
 	if err != nil {
 		return nil, err
 	}
@@ -83,10 +112,9 @@ func (q *Queries) GetSchedulesByUserID(ctx context.Context, userID string) ([]Ge
 		var i GetSchedulesByUserIDRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.WeekStartDate,
-			&i.DayOfWeek,
-			&i.ClockIn,
-			&i.ClockOut,
+			&i.Day,
+			&i.Clockin,
+			&i.Clockout,
 		); err != nil {
 			return nil, err
 		}
@@ -129,85 +157,25 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 	return items, nil
 }
 
-const getWeekSchedules = `-- name: GetWeekSchedules :many
-SELECT schedules.id, schedules.user_id as "userId", users.name, users.role, schedules.day_of_week as "dayOfWeek", schedules.clock_in as "clockIn", schedules.clock_out as "clockOut"
-FROM schedules
-JOIN users ON schedules.user_id = users.id
-WHERE schedules.week_start_date = ?
-`
-
-type GetWeekSchedulesRow struct {
-	ID        int64  `json:"id"`
-	UserId    string `json:"userId"`
-	Name      string `json:"name"`
-	Role      string `json:"role"`
-	DayOfWeek int64  `json:"dayOfWeek"`
-	ClockIn   string `json:"clockIn"`
-	ClockOut  string `json:"clockOut"`
-}
-
-func (q *Queries) GetWeekSchedules(ctx context.Context, weekStartDate string) ([]GetWeekSchedulesRow, error) {
-	rows, err := q.db.QueryContext(ctx, getWeekSchedules, weekStartDate)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetWeekSchedulesRow
-	for rows.Next() {
-		var i GetWeekSchedulesRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.UserId,
-			&i.Name,
-			&i.Role,
-			&i.DayOfWeek,
-			&i.ClockIn,
-			&i.ClockOut,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const updateScheduleTimes = `-- name: UpdateScheduleTimes :exec
 UPDATE schedules
-SET clock_in = ?, clock_out = ?
+SET clockIn = ?, clockOut = ?, day = ?
 WHERE id = ?
 `
 
 type UpdateScheduleTimesParams struct {
-	ClockIn  string `json:"clock_in"`
-	ClockOut string `json:"clock_out"`
+	Clockin  string `json:"clockin"`
+	Clockout string `json:"clockout"`
+	Day      string `json:"day"`
 	ID       int64  `json:"id"`
 }
 
 func (q *Queries) UpdateScheduleTimes(ctx context.Context, arg UpdateScheduleTimesParams) error {
-	_, err := q.db.ExecContext(ctx, updateScheduleTimes, arg.ClockIn, arg.ClockOut, arg.ID)
-	return err
-}
-
-const updateWeekStartDateByUserID = `-- name: UpdateWeekStartDateByUserID :exec
-UPDATE schedules
-SET week_start_date = ?
-WHERE user_id = ?
-  AND week_start_date = ?
-`
-
-type UpdateWeekStartDateByUserIDParams struct {
-	WeekStartDate   string `json:"week_start_date"`
-	UserID          string `json:"user_id"`
-	WeekStartDate_2 string `json:"week_start_date_2"`
-}
-
-func (q *Queries) UpdateWeekStartDateByUserID(ctx context.Context, arg UpdateWeekStartDateByUserIDParams) error {
-	_, err := q.db.ExecContext(ctx, updateWeekStartDateByUserID, arg.WeekStartDate, arg.UserID, arg.WeekStartDate_2)
+	_, err := q.db.ExecContext(ctx, updateScheduleTimes,
+		arg.Clockin,
+		arg.Clockout,
+		arg.Day,
+		arg.ID,
+	)
 	return err
 }

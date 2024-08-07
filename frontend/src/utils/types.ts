@@ -1,19 +1,30 @@
 export type UserResponse = {
-    id: string
-    name: string
-    role: string
-}
+    id: string;
+    name: string;
+    role: string;
+};
+
+export type AllScheduleResponse = {
+    name: string;
+    role: string;
+    id: number;
+    userId: string;
+    day: string;
+    clockIn: string;
+    clockOut: string;
+}[]
 
 export type WeekSchedule = {
-    [week_start_date: string]: DaySchedule;
+    [weekStartDate: string]: DaySchedule;
 };
 
 export type DaySchedule = {
-    [day_of_week: number]: TimeEntry[];
+    [dayOfWeek: number]: TimeEntry[];
 };
 
 export type TimeEntry = {
     id: number;
+    day: string;
     clockIn: string;
     clockOut: string;
 };
@@ -21,8 +32,8 @@ export type TimeEntry = {
 export type ActiveState = {
     userId: string | null;
     entryId: number;
-    weekStartDate: string;
-    dayOfWeek: number;
+    day: string;
     clockIn: string;
     clockOut: string;
-}
+};
+

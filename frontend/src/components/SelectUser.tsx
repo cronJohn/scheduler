@@ -1,12 +1,14 @@
-import { Component, For } from "solid-js";
-import { useUsersCtx } from "../context/Users";
+import { Component, For, createResource } from "solid-js";
+import { fetchUsers } from "../utils/api";
 
 export const SelectUser: Component<{
     setFn: (input: string) => void;
     isDisabled?: boolean
     width?: string
+    autofocus?: boolean
     placeholder?: string
 }> = (props) => {
+    const [users] = createResource(fetchUsers);
     return (
         <>
             <input
@@ -19,11 +21,11 @@ export const SelectUser: Component<{
             class="py-2 px-4 border-2 border-solid border-primary text-2xl rounded bg-offDark text-light disabled-text-gray-500"
             placeholder={props.placeholder || "Enter ID"}
             style={{width: props.width}}
-            autofocus
+            autofocus={props.autofocus}
             />
 
             <datalist id="users">
-                <For each={useUsersCtx().latest}>
+                <For each={users.latest}>
                 {(user) => (
                     <option value={user.id} />
                 )}

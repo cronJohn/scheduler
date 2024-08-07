@@ -5,12 +5,11 @@
 package sqlc
 
 type Schedule struct {
-	ID            int64  `json:"id"`
-	UserID        string `json:"user_id"`
-	WeekStartDate string `json:"week_start_date"`
-	DayOfWeek     int64  `json:"day_of_week"`
-	ClockIn       string `json:"clock_in"`
-	ClockOut      string `json:"clock_out"`
+	ID       int64  `json:"id"`
+	Userid   string `json:"userid"`
+	Day      string `json:"day"`
+	Clockin  string `json:"clockin"`
+	Clockout string `json:"clockout"`
 }
 
 type User struct {

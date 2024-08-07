@@ -1,17 +1,12 @@
-import { Component, For, createEffect, createMemo } from "solid-js";
-import { createCachedResource } from 'solid-cache';
-import { fetchWeekSchedules } from "../utils/api";
+import { Component, For, createMemo, createResource } from "solid-js";
 import { itd, mtr } from "../utils/conv";
+import { fetchAllSchedules } from "../utils/api";
 import { getDateISO, getDateWithOffset } from "../utils/helper";
 
 export const SchedulesOverview: Component<{
     week: () => string | undefined;
 }> = (props) => {
-    const { data: scheduleDate } = createCachedResource({
-        source: () => props.week(),  // Function returning the week value
-        key: (week) => `schedules/${week}`,  // Generate a cache key based on the week
-        get: (week) => fetchWeekSchedules(week),  // Fetch function
-    });
+    const [allSchedules] = createResource(fetchAllSchedules);
 
     const weekDates = createMemo(() => {
         const startDate = props.week();
@@ -23,88 +18,90 @@ export const SchedulesOverview: Component<{
             };
         });
     })
-
+    
     return (
-    <table class="w-full text-center text-light print-text-dark font-norm bg-white border-collapse">
-        <thead>
-            <tr>
-                <For each={weekDates()}>
-                    {({ dayName, date }) => (
-                        <th class="b b-solid b-white print-b-dark bg-dark print-bg-white p-2 min-w-240px w-260px text-xl">
-                            {dayName} <br /> {date}
-                        </th>
-                    )}
-                </For>
-            </tr>
-        </thead>
-        <tbody>
-            {["Inshop", "Driver", "Manager"].map((role) => (
-                <>
-                    <tr>
-                        <td colspan={7} class="b b-solid b-white print-b-dark bg-black print-bg-white p-2 font-bold text-xl text-primary">
-                            {role}
-                        </td>
-                    </tr>
-                    <tr>
-                        <For each={weekDates()}>
-                            {(_, i) => {
-                                const schedules = scheduleDate() || [];
-                                const amSchedules = schedules.filter(schedule => 
-                                    schedule.dayOfWeek === i() && 
-                                    schedule.role === role.toLowerCase() && 
-                                    Number(schedule.clockIn.slice(0, 2)) < 12);
-                                const pmSchedules = schedules.filter(schedule => 
-                                    schedule.dayOfWeek === i() && 
-                                    schedule.role === role.toLowerCase() && 
-                                    Number(schedule.clockIn.slice(0, 2)) >= 12);
-                                
-                                return (
-                                    <td class="b b-solid b-white print-b-dark bg-dark print-bg-white">
-                                        <div>
-                                            {amSchedules.length > 0 && (
-                                                <>
-                                                    <h3 class="font-bold text-lg">AM</h3>
-                                                    <For each={amSchedules}>
-                                                        {(schedule) => (
-                                                            <div class="p-2 flex b-y-1px b-x-none b-solid b-white print-b-dark last:border-b-none items-center flex-justify-between">
-                                                                <div class="pr-2 b-r-1px b-r-solid b-r-white print-b-r-dark">
-                                                                    {schedule.name}
-                                                                </div>
-                                                                <div class="pl-auto">
-                                                                    {mtr(schedule.clockIn)} - {mtr(schedule.clockOut)}
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </For>
-                                                </>
-                                            )}
-                                            {pmSchedules.length > 0 && (
-                                                <>
-                                                    <h3 class="font-bold text-lg">PM</h3>
-                                                    <For each={pmSchedules}>
-                                                        {(schedule) => (
-                                                            <div class="p-2 flex b-y-1px b-x-none b-solid b-white print-b-dark last:border-b-none items-center flex-justify-between">
-                                                                <div class="pr-2 b-r-1px b-r-solid b-r-white print-b-r-dark">
-                                                                    {schedule.name}
-                                                                </div>
-                                                                <div class="pl-auto">
-                                                                    {mtr(schedule.clockIn)} - {mtr(schedule.clockOut)}
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </For>
-                                                </>
-                                            )}
-                                        </div>
-                                    </td>
-                                );
-                            }}
-                        </For>
-                    </tr>
-                </>
-            ))}
-        </tbody>
-    </table> 
+        <table class="w-full text-center text-light print-text-dark font-norm bg-white border-collapse">
+            <thead>
+                <tr>
+                    <For each={weekDates()}>
+                        {({ dayName, date }) => (
+                            <th class="ol outline-solid outline-white print-outline-dark bg-dark print-bg-white p-2 min-w-240px w-260px text-xl">
+                                {dayName} <br /> {date}
+                            </th>
+                        )}
+                    </For>
+                </tr>
+            </thead>
+            <tbody>
+                {["inshop", "driver", "manager"].map((role) => (
+                    <>
+                        <tr>
+                            <td colspan={7} class="ol outline-solid outline-white print-outline-dark bg-black print-bg-white p-2 font-bold text-xl text-primary">
+                                {role.charAt(0).toUpperCase() + role.slice(1)}
+                            </td>
+                        </tr>
+                        <tr>
+                            <For each={weekDates()}>
+                                {({ date }) => {
+                                    const schedulesForDay = (allSchedules() || []).filter(schedule => 
+                                        schedule.day === date && 
+                                        schedule.role.toLowerCase() === role
+                                    );
+
+                                    const amSchedules = schedulesForDay.filter(schedule => Number(schedule.clockIn.slice(0, 2)) < 12);
+                                    const pmSchedules = schedulesForDay.filter(schedule => Number(schedule.clockIn.slice(0, 2)) >= 12);
+
+                                    return (
+                                        <td class="ol outline-solid outline-white print-outline-dark bg-dark print-bg-white">
+                                            <div>
+                                                {amSchedules.length > 0 && (
+                                                    <>
+                                                        <h3 class="font-bold text-lg">AM</h3>
+                                                        <div class="ol outline-solid outline-white print-outline-dark">
+                                                            <For each={amSchedules}>
+                                                                {(schedule) => (
+                                                                    <div class="p-2 flex ol even-outline-0px outline-solid outline-white print-outline-dark items-center flex-justify-between">
+                                                                        <div class="pr-2 outline-none b-r-1px b-r-solid print-border-dark">
+                                                                            {schedule.name}
+                                                                        </div>
+                                                                        <div class="pl-auto">
+                                                                            {mtr(schedule.clockIn)} - {mtr(schedule.clockOut)}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                            </For>
+                                                        </div>
+                                                    </>
+                                                )}
+                                                {pmSchedules.length > 0 && (
+                                                    <>
+                                                        <h3 class="font-bold text-lg">PM</h3>
+                                                        <div class="ol outline-solid outline-white print-outline-dark">
+                                                            <For each={pmSchedules}>
+                                                                {(schedule) => (
+                                                                    <div class="p-2 flex ol even-outline-0px outline-solid outline-white print-outline-dark items-center flex-justify-between">
+                                                                        <div class="pr-2 outline-none b-r-1px b-r-solid print-border-dark">
+                                                                            {schedule.name}
+                                                                        </div>
+                                                                        <div class="pl-auto">
+                                                                            {mtr(schedule.clockIn)} - {mtr(schedule.clockOut)}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                            </For>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </td>
+                                    );
+                                }}
+                            </For>
+                        </tr>
+                    </>
+                ))}
+            </tbody>
+        </table>
     );
 };
 

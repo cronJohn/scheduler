@@ -11,9 +11,8 @@ import Home from './pages/Home';
 import Schedules from './pages/Schedules';
 import Login from './pages/Login';
 import Admin from './pages/Admin';
-import Unknown from './pages/Unknown';
-import { UsersProvider } from './context/Users';
 import Overview from './pages/Overview';
+import Unknown from './pages/Unknown';
 
 const root = document.getElementById('root');
 
@@ -25,16 +24,14 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
 
 render(
     () => (
-        <UsersProvider>
-            <Router>
-                <Route path="/" component={Home} />
-                <Route path="/schedules" component={Schedules} />
-                <Route path="/login" component={Login} />
-                <Route path="/admin" component={Admin} />
-                <Route path={"/overview"} component={Overview} />
-                <Route path="/*" component={Unknown} />
-            </Router>
-        </UsersProvider>
+        <Router>
+            <Route path="/" component={Home} />
+            <Route path="/schedules" component={Schedules} />
+            <Route path="/login" component={Login} />
+            <Route path="/admin" component={Admin} />
+            <Route path="/overview" component={Overview} />
+            <Route path="/*" component={Unknown} />
+        </Router>
     ),
     root!,
 );

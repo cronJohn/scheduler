@@ -44,16 +44,11 @@ func (s *Server) Start() error {
 
 	// API/data handlers
 	s.mux.HandleFunc("GET /api/users", middleware.Log(handlers.GetUsers))
+	s.mux.HandleFunc("GET /api/schedules", middleware.Log(handlers.GetAllSchedules))
 	s.mux.HandleFunc("GET /api/users/{id}/schedule", middleware.Log(handlers.GetUserSchedules))
-	s.mux.HandleFunc("GET /api/schedule/{week}", middleware.Log(handlers.GetWeekSchedules))
 	s.mux.HandleFunc("POST /api/users/{id}/schedule", middleware.Log(handlers.CreateUserSchedule))
 	s.mux.HandleFunc("PUT /api/users/schedule", middleware.Log(handlers.UpdateUserSchedule))
-	s.mux.HandleFunc("PUT /api/users/{id}/weekstart", middleware.Log(handlers.UpdateUserWeekStart))
-	s.mux.HandleFunc("DELETE /api/users/schedule", middleware.Log(handlers.DeleteUserSchedule))
-	s.mux.HandleFunc(
-		"DELETE /api/users/{id}/weekstart",
-		middleware.Log(handlers.DeleteUserWeekStart),
-	)
+	s.mux.HandleFunc("DELETE /api/users/schedule/{id}", middleware.Log(handlers.DeleteUserSchedule))
 
 	// Catch-all route
 	s.mux.HandleFunc("/", middleware.Log(func(w http.ResponseWriter, r *http.Request) {

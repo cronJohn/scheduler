@@ -1,4 +1,4 @@
-import { UserResponse, WeekSchedule } from "./types";
+import { AllScheduleResponse, TimeEntry, UserResponse } from "./types";
 
 const logResponse = (response: Response) => {
     if (!response.ok) {
@@ -11,52 +11,43 @@ export const fetchUsers = async (): Promise<UserResponse[]> => {
         const response = await fetch(`${import.meta.env.VITE_SERV}/api/users`);
         if (response.ok) {
             return response.json();
-        } return [];
+        }
+        return [];
     } catch (error) {
         console.error(error);
         return [];
     }
 }
 
-export const fetchUserSchedules = async (user_id: string): Promise<WeekSchedule> => {
+export const fetchUserSchedules = async (user_id: string): Promise<TimeEntry[]> => {
+    if (!user_id) return [];
     try {
         const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/${user_id}/schedule`);
         if (response.ok) {
             return response.json();
-        } return {};
-    } catch (error) {
-        console.error(error);
-        return {};
-    }
-}
-
-export type WeekScheduleData = {
-    id: number;
-    userId: string;
-    name: string;
-    role: string;
-    dayOfWeek: number;
-    clockIn: string;
-    clockOut: string;
-}
-
-export const fetchWeekSchedules = async (week: string | undefined): Promise<WeekScheduleData[]> => {
-    if (!week) return [];
-    try {
-        const response = await fetch(`${import.meta.env.VITE_SERV}/api/schedule/${week}`);
-        if (response.ok) {
-            return response.json();
-        } return [];
+        }
+        return [];
     } catch (error) {
         console.error(error);
         return [];
     }
-    
+}
+
+export const fetchAllSchedules = async (): Promise<AllScheduleResponse> => {
+    try {
+        const response = await fetch(`${import.meta.env.VITE_SERV}/api/schedules`);
+        if (response.ok) {
+            return response.json();
+        }
+        return [];
+    } catch (error) {
+        console.error(error);
+        return [];
+    }
 }
 
 export type NewScheduleData = {
-    weekStartDate: string;
-    dayOfWeek: number;
+    day: string;
     clockIn: string;
     clockOut: string;
 }
@@ -74,6 +65,7 @@ export const createNewSchedule = async (user_id: string, data: NewScheduleData) 
 
 export type UpdateScheduleData = {
     entryId: number;
+    day: string;
     clockIn: string;
     clockOut: string;
 }
@@ -89,27 +81,11 @@ export const updateExistingSchedule = async (data: UpdateScheduleData) => {
     logResponse(response);
 }
 
-export type UpdateWeekStartData = {
-    oldWeekStartDate: string;
-    newWeekStartDate?: string;
-}
-export const updateUserWeekStartDate = async (user_id: string, data: UpdateWeekStartData) => {
-    const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/${user_id}/weekstart`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-    });
-
-    logResponse(response);
-}
-
 export type DeleteScheduleData = {
     entryId: number;
 }
 export const deleteExistingSchedule = async (data: DeleteScheduleData) => {
-    const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/schedule`, {
+    const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/schedule/${data.entryId}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
@@ -120,17 +96,3 @@ export const deleteExistingSchedule = async (data: DeleteScheduleData) => {
     logResponse(response);
 }
 
-export type DeleteUserWeekStartDateData = {
-    weekStartDate: string;
-}
-export const deleteUserWeekStartDate = async (user_id: string, data: DeleteUserWeekStartDateData) => {
-    const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/${user_id}/weekstart`, {
-        method: 'DELETE',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-    });
-
-    logResponse(response);
-}

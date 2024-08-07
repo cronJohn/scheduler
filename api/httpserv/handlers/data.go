@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -12,10 +13,9 @@ import (
 )
 
 type (
-	dataMap      map[string]dayOfWeekMap
-	dayOfWeekMap map[int64][]timeEntry
-	timeEntry    struct {
+	timeEntry struct {
 		Id       int64  `json:"id"`
+		Day      string `json:"day"`
 		ClockIn  string `json:"clockIn"`
 		ClockOut string `json:"clockOut"`
 	}
@@ -47,45 +47,40 @@ func (h *Handler) GetUserSchedules(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	schedules, err := h.db.GetSchedulesByUserID(ctx, r.PathValue("id"))
+	userID := r.PathValue("id")
+	if userID == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Error().Msg("User ID is missing in request")
+		return
+	}
+
+	schedules, err := h.db.GetSchedulesByUserID(ctx, userID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error().Msgf("Failed to get schedules: %v", err)
+		log.Error().Msgf("Failed to get user schedules: %v", err)
 		return
 	}
 
 	if len(schedules) == 0 {
 		w.WriteHeader(http.StatusNotFound)
-		log.Info().Msgf("No schedules found for user '%v'", r.PathValue("id"))
+		log.Info().Msgf("No schedules found for user '%v'", userID)
 		return
 	}
 
-	dataMap := make(dataMap)
-
-	// Populate the map
+	var entries []timeEntry
 	for _, sch := range schedules {
-		if _, exists := dataMap[sch.WeekStartDate]; !exists {
-			dataMap[sch.WeekStartDate] = make(dayOfWeekMap)
-		}
-
-		if _, exists := dataMap[sch.WeekStartDate][sch.DayOfWeek]; !exists {
-			dataMap[sch.WeekStartDate][sch.DayOfWeek] = []timeEntry{}
-		}
-
-		dataMap[sch.WeekStartDate][sch.DayOfWeek] = append(
-			dataMap[sch.WeekStartDate][sch.DayOfWeek],
-			timeEntry{
-				Id:       sch.ID,
-				ClockIn:  sch.ClockIn,
-				ClockOut: sch.ClockOut,
-			},
-		)
+		entries = append(entries, timeEntry{
+			Id:       sch.ID,
+			Day:      sch.Day,
+			ClockIn:  sch.Clockin,
+			ClockOut: sch.Clockout,
+		})
 	}
 
-	data, err := json.Marshal(dataMap)
+	data, err := json.Marshal(entries)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error().Msgf("Failed to marshal schedules map: %v", err)
+		log.Error().Msgf("Failed to marshal schedules: %v", err)
 		return
 	}
 
@@ -93,14 +88,14 @@ func (h *Handler) GetUserSchedules(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-func (h *Handler) GetWeekSchedules(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetAllSchedules(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	schedules, err := h.db.GetWeekSchedules(ctx, r.PathValue("week"))
+	schedules, err := h.db.GetAllSchedules(ctx)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error().Msgf("Failed to get schedules: %v", err)
+		log.Error().Msgf("Failed to get all schedules: %v", err)
 		return
 	}
 
@@ -120,10 +115,9 @@ func (h *Handler) CreateUserSchedule(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	var req struct {
-		WeekStartDate string `json:"weekStartDate"`
-		DayOfWeek     int64  `json:"dayOfWeek"`
-		ClockIn       string `json:"clockIn"`
-		ClockOut      string `json:"clockOut"`
+		Day      string `json:"day"`
+		ClockIn  string `json:"clockIn"`
+		ClockOut string `json:"clockOut"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -132,12 +126,18 @@ func (h *Handler) CreateUserSchedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userID := r.PathValue("id")
+	if userID == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Error().Msg("User ID is missing in request")
+		return
+	}
+
 	err := h.db.CreateSchedule(ctx, sqlc.CreateScheduleParams{
-		UserID:        r.PathValue("id"),
-		WeekStartDate: req.WeekStartDate,
-		DayOfWeek:     req.DayOfWeek,
-		ClockIn:       req.ClockIn,
-		ClockOut:      req.ClockOut,
+		Userid:   userID,
+		Day:      req.Day,
+		Clockin:  req.ClockIn,
+		Clockout: req.ClockOut,
 	})
 	if err != nil {
 		http.Error(w, "Failed to create schedule", http.StatusInternalServerError)
@@ -153,6 +153,7 @@ func (h *Handler) UpdateUserSchedule(w http.ResponseWriter, r *http.Request) {
 
 	var req struct {
 		EntryID  int64  `json:"entryId"`
+		Day      string `json:"day"`
 		ClockIn  string `json:"clockIn"`
 		ClockOut string `json:"clockOut"`
 	}
@@ -165,39 +166,12 @@ func (h *Handler) UpdateUserSchedule(w http.ResponseWriter, r *http.Request) {
 
 	err := h.db.UpdateScheduleTimes(ctx, sqlc.UpdateScheduleTimesParams{
 		ID:       req.EntryID,
-		ClockIn:  req.ClockIn,
-		ClockOut: req.ClockOut,
+		Day:      req.Day,
+		Clockin:  req.ClockIn,
+		Clockout: req.ClockOut,
 	})
 	if err != nil {
 		http.Error(w, "Failed to update schedule", http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-}
-
-func (h *Handler) UpdateUserWeekStart(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	var req struct {
-		OldWeekStartDate string `json:"oldWeekStartDate"`
-		NewWeekStartDate string `json:"newWeekStartDate"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		log.Error().Msgf("Failed to decode request body: %v", err)
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
-
-	err := h.db.UpdateWeekStartDateByUserID(ctx, sqlc.UpdateWeekStartDateByUserIDParams{
-		WeekStartDate:   req.NewWeekStartDate,
-		UserID:          r.PathValue("id"),
-		WeekStartDate_2: req.OldWeekStartDate,
-	})
-	if err != nil {
-		http.Error(w, "Failed to update week start date", http.StatusInternalServerError)
 		return
 	}
 
@@ -208,48 +182,15 @@ func (h *Handler) DeleteUserSchedule(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	var req struct {
-		EntryID int64 `json:"entryId"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		log.Error().Msgf("Failed to decode request body: %v", err)
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+	entryID, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "Invalid entry ID", http.StatusBadRequest)
 		return
 	}
 
-	err := h.db.DeleteSchedule(ctx, req.EntryID)
+	err = h.db.DeleteSchedule(ctx, int64(entryID))
 	if err != nil {
 		http.Error(w, "Failed to delete schedule", http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-}
-
-func (h *Handler) DeleteUserWeekStart(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	var req struct {
-		WeekStartDate string `json:"weekStartDate"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		log.Error().Msgf("Failed to decode request body: %v", err)
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
-
-	err := h.db.DeleteSchedulesByIdAndWeekStartDate(
-		ctx,
-		sqlc.DeleteSchedulesByIdAndWeekStartDateParams{
-			UserID:        r.PathValue("id"),
-			WeekStartDate: req.WeekStartDate,
-		},
-	)
-	if err != nil {
-		http.Error(w, "Failed to delete week start date", http.StatusInternalServerError)
 		return
 	}
 

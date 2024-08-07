@@ -3,35 +3,24 @@ SELECT *
 FROM users;
 
 -- name: GetSchedulesByUserID :many
-SELECT id, week_start_date, day_of_week, clock_in, clock_out
+SELECT id, day, clockIn, clockOut
 FROM schedules
-WHERE user_id = ?;
+WHERE userId = ?;
 
--- name: GetWeekSchedules :many
-SELECT schedules.id, schedules.user_id as "userId", users.name, users.role, schedules.day_of_week as "dayOfWeek", schedules.clock_in as "clockIn", schedules.clock_out as "clockOut"
+-- name: GetAllSchedules :many
+SELECT users.name, users.role, schedules.id, schedules.userId as "userId", schedules.day, schedules.clockIn as "clockIn", schedules.clockOut as "clockOut"
 FROM schedules
-JOIN users ON schedules.user_id = users.id
-WHERE schedules.week_start_date = ?;
+JOIN users ON schedules.userId= users.id;
 
 -- name: CreateSchedule :exec
-INSERT INTO schedules (user_id, week_start_date, day_of_week, clock_in, clock_out)
-VALUES (?, ?, ?, ?, ?);
+INSERT INTO schedules (userId, day, clockIn, clockOut)
+VALUES (?, ?, ?, ?);
 
 -- name: UpdateScheduleTimes :exec
 UPDATE schedules
-SET clock_in = ?, clock_out = ?
+SET clockIn = ?, clockOut = ?, day = ?
 WHERE id = ?;
-
--- name: UpdateWeekStartDateByUserID :exec
-UPDATE schedules
-SET week_start_date = ?
-WHERE user_id = ?
-  AND week_start_date = ?;
 
 -- name: DeleteSchedule :exec
 DELETE FROM schedules
 WHERE id = ?;
-
--- name: DeleteSchedulesByIdAndWeekStartDate :exec
-DELETE FROM schedules
-WHERE user_id = ? AND week_start_date = ?;

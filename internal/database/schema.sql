@@ -6,10 +6,9 @@ CREATE TABLE users (
 
 CREATE TABLE schedules (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id TEXT NOT NULL,
-    week_start_date TEXT NOT NULL,
-    day_of_week INTEGER CHECK(day_of_week BETWEEN 0 AND 6) NOT NULL,
-    clock_in TEXT NOT NULL,
-    clock_out TEXT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    userId TEXT NOT NULL,
+    day TEXT NOT NULL,
+    clockIn TEXT NOT NULL,
+    clockOut TEXT NOT NULL,
+    FOREIGN KEY (userId) REFERENCES users(id)
 );

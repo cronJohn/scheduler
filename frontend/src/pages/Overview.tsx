@@ -1,6 +1,7 @@
 import { Component, createSignal } from "solid-js";
 import { SchedulesOverview } from "../components/SchedulesOverview";
-import { CacheBoundary } from "solid-cache";
+import { getDateISO } from "../utils/helper";
+import { NavBar } from "../components/NavBar";
 
 const Overview: Component = () => {
     const [weekSelection, setWeekSelection] = createSignal<string>();
@@ -12,15 +13,14 @@ const Overview: Component = () => {
                 <input
                 id="week_start_date"
                 type="date"
-                value={weekSelection() || ""}
+                value={weekSelection() || getDateISO()}
                 onChange={(e) => setWeekSelection(e.currentTarget.value)}
                 class="py-2 px-4 border-2 border-solid border-primary rounded bg-offDark text-2xl text-white iw"
                 />
+                <NavBar />
             </header>
 
-            <CacheBoundary>
-                <SchedulesOverview week={weekSelection}/>
-            </CacheBoundary>
+            <SchedulesOverview week={weekSelection}/>
         </>
     );
 };

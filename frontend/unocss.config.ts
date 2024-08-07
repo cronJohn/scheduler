@@ -22,8 +22,11 @@ export default defineConfig({
       'width': '175px',
     }],
     ['sw', { // section width
-        'width': '75%',
+        'width': '100%',
     }],
+    ["ol", { // outline
+        'outline-width': '0.5px',
+    }]
   ],
   theme: {
     colors: {
