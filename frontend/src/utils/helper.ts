@@ -20,15 +20,8 @@ export const nearestStartOfWeek = (dateString: string, targetDayOfWeek: number):
     const currentDayOfWeek = date.getDay();
 
     const diff = targetDayOfWeek - currentDayOfWeek;
-    let timeDelta: Number = 0;
 
-    if (diff <= 0) {
-        timeDelta = diff;
-    } else {
-        timeDelta = diff - 7;
-    }
-
-    date.setUTCDate(date.getUTCDate() + diff);
+    date.setUTCDate(date.getUTCDate() + diff <= 0 ? diff : diff - 7);
     return date.toISOString().split('T')[0]; // Return the date in YYYY-MM-DD format
 };
 
