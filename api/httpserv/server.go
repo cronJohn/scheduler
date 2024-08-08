@@ -46,11 +46,23 @@ func (s *Server) Start() error {
 
 	// API/data handlers
 	s.mux.HandleFunc("GET /api/users", middleware.Log(handlers.GetUsers))
-	s.mux.HandleFunc("GET /api/schedules", middleware.Log(handlers.GetAllSchedules))
+	s.mux.HandleFunc(
+		"GET /api/schedules",
+		middleware.Log(middleware.Auth(handlers.GetAllSchedules)),
+	)
 	s.mux.HandleFunc("GET /api/users/{id}/schedule", middleware.Log(handlers.GetUserSchedules))
-	s.mux.HandleFunc("POST /api/users/{id}/schedule", middleware.Log(handlers.CreateUserSchedule))
-	s.mux.HandleFunc("PUT /api/users/schedule", middleware.Log(handlers.UpdateUserSchedule))
-	s.mux.HandleFunc("DELETE /api/users/schedule/{id}", middleware.Log(handlers.DeleteUserSchedule))
+	s.mux.HandleFunc(
+		"POST /api/users/{id}/schedule",
+		middleware.Log(middleware.Auth(handlers.CreateUserSchedule)),
+	)
+	s.mux.HandleFunc(
+		"PUT /api/users/schedule",
+		middleware.Log(middleware.Auth(handlers.UpdateUserSchedule)),
+	)
+	s.mux.HandleFunc(
+		"DELETE /api/users/schedule/{id}",
+		middleware.Log(middleware.Auth(handlers.DeleteUserSchedule)),
+	)
 
 	// Catch-all route
 	s.mux.HandleFunc("/", middleware.Log(func(w http.ResponseWriter, r *http.Request) {
