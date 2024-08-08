@@ -36,7 +36,7 @@ func main() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, os.Kill, syscall.SIGTERM)
 
-	log.Info().Msgf("Starting server on %s...", os.Getenv("SS_HOST")+os.Getenv("SS_PORT"))
+	log.Info().Msgf("Starting server on %s...", os.Getenv("SS_PORT"))
 	go server.Start()
 
 	<-c

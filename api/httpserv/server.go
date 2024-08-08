@@ -25,7 +25,7 @@ func NewServer(db *sql.DB) *Server {
 
 	return &Server{
 		server: &http.Server{
-			Addr:    os.Getenv("SS_HOST") + os.Getenv("SS_PORT"),
+			Addr:    os.Getenv("SS_PORT"),
 			Handler: mux,
 		},
 		mux: mux,
