@@ -10,7 +10,7 @@ const Login: Component = () => {
         let response: Response;
 
         try {
-            response = await fetch(`${import.meta.env.VITE_SERV}/login`, {
+            response = await fetch(`${import.meta.env.VITE_SERV}/api/login`, {
                 method: 'POST',
                 body: formData,
                 credentials: 'include', // need this for cookies to be set
