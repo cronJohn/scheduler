@@ -37,3 +37,13 @@ export type ActiveState = {
     clockOut: string;
 };
 
+// Define the type for the navigate options
+interface NavigateOptions {
+    resolve?: boolean;
+    replace?: boolean;
+    scroll?: boolean;
+    state?: any;
+}
+
+// Define the type for the navigate function
+export type NavigateFunction = (to: string, options?: NavigateOptions) => void;

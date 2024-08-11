@@ -29,3 +29,14 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &cookie)
 	log.Info().Msg("User logged in")
 }
+
+func (h *Handler) CheckAuth(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("auth")
+	if err != nil || cookie.Value != os.Getenv("SS_CK") {
+		log.Error().Msg("User is not authorized")
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}

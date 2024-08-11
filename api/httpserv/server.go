@@ -47,6 +47,7 @@ func (s *Server) Start() error {
 
 	// Auth
 	s.mux.HandleFunc("POST /api/login", handlers.Login)
+	s.mux.HandleFunc("GET /api/checkauth", handlers.CheckAuth)
 
 	// API/data handlers
 	s.mux.HandleFunc("GET /api/users", middleware.Log(handlers.GetUsers))

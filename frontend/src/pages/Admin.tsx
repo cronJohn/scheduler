@@ -1,4 +1,4 @@
-import { For, Show, createResource, createSignal, type Component } from 'solid-js';
+import { For, Show, createResource, createSignal, onMount, type Component } from 'solid-js';
 import { fetchUserSchedules, updateExistingSchedule, deleteExistingSchedule, createNewSchedule, NewScheduleData, UpdateScheduleData, DeleteScheduleData } from '../utils/api';
 import { fmtDate, itd } from '../utils/conv';
 import { TimeSlot } from '../components/TimeSlot';
@@ -9,8 +9,18 @@ import { AddEntryModal } from '../components/modals/AddEntryModal';
 import { ActiveState, DaySchedule, TimeEntry } from '../utils/types';
 import { getDateISO, groupSchedulesByWeek } from '../utils/helper';
 import { NavBar } from '../components/NavBar';
+import { useNavigate } from '@solidjs/router';
 
 const Admin: Component = () => {
+    const navigate = useNavigate();
+
+    onMount(async () => {
+        const resp = await fetch(`${import.meta.env.VITE_SERV}/api/checkauth`);
+        if (!resp.ok) {
+            navigate('/login');
+        }
+    })
+
     const [isTimeSlotModalOpen, setIsTimeSlotModalOpen] = createSignal<boolean>(false);
     const [isAddEntryModalOpen, setIsAddEntryModalOpen] = createSignal<boolean>(false);
 
@@ -65,7 +75,7 @@ const Admin: Component = () => {
     const handleAddNewSchedule = async (data: NewScheduleData, userId: string) => {
         try {
             if (!currentSelection) return;
-            await createNewSchedule(userId, data);
+            await createNewSchedule(userId, data, navigate);
             refetch();
             setIsAddEntryModalOpen(false);
         } catch (error) {
@@ -76,7 +86,7 @@ const Admin: Component = () => {
     const handleUpdateExistingSchedule = async (data: UpdateScheduleData) => {
         try {
             if (!currentSelection) return;
-            await updateExistingSchedule(data);
+            await updateExistingSchedule(data, navigate);
             refetch();
             setIsTimeSlotModalOpen(false);
         } catch (error) {
@@ -87,7 +97,7 @@ const Admin: Component = () => {
     const handleDeleteExistingSchedule = async (data: DeleteScheduleData) => {
         try {
             if (!currentSelection) return;
-            await deleteExistingSchedule(data);
+            await deleteExistingSchedule(data, navigate);
             refetch();
             setIsTimeSlotModalOpen(false);
         } catch (error) {

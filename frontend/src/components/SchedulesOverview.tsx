@@ -2,11 +2,13 @@ import { Component, For, createMemo, createResource } from "solid-js";
 import { itd, mtr } from "../utils/conv";
 import { fetchAllSchedules } from "../utils/api";
 import { getDateISO, getDateWithOffset } from "../utils/helper";
+import { useNavigate } from "@solidjs/router";
 
 export const SchedulesOverview: Component<{
     week: () => string | undefined;
 }> = (props) => {
-    const [allSchedules] = createResource(fetchAllSchedules);
+    const navigate = useNavigate();
+    const [allSchedules] = createResource(() => fetchAllSchedules(navigate));
 
     const weekDates = createMemo(() => {
         const startDate = props.week();
