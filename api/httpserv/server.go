@@ -3,6 +3,7 @@ package httpserv
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"net/http"
 	"os"
 
@@ -12,7 +13,10 @@ import (
 	"github.com/cronJohn/scheduler/api/httpserv/middleware"
 )
 
-var dbHandle *sql.DB
+var (
+	dbHandle    *sql.DB
+	SERVER_HOST string
+)
 
 type Server struct {
 	server *http.Server
@@ -25,7 +29,7 @@ func NewServer(db *sql.DB) *Server {
 
 	return &Server{
 		server: &http.Server{
-			Addr:    os.Getenv("SS_PORT"),
+			Addr:    fmt.Sprintf("%s%s", SERVER_HOST, os.Getenv("SS_PORT")),
 			Handler: mux,
 		},
 		mux: mux,
@@ -77,6 +81,8 @@ func (s *Server) Start() error {
 
 	tlsCert := os.Getenv("TLS_CERT")
 	tlsKey := os.Getenv("TLS_KEY")
+
+	log.Info().Msgf("Starting server on %s%s...", SERVER_HOST, os.Getenv("SS_PORT"))
 	if tlsCert != "" && tlsKey != "" {
 		log.Info().Msg("Starting server with TLS...")
 		return s.server.ListenAndServeTLS(tlsCert, tlsKey)
