@@ -19,11 +19,11 @@ export const TimeSlot: Component<{
         <div class='relative nm p-4 rounded'>
             <div class='flex justify-between items-center gap-8'>
                 <div>
-                    <p class='text-xl my-0'>In:</p>
+                    <p class='text-xl my-0 text-center b-b b-b-solid'>In</p>
                     <p class='text-lg my-0'>{mtr(state.clockIn)}</p>
                 </div>
                 <div>
-                    <p class='text-xl my-0'>Out:</p>
+                    <p class='text-xl my-0 text-center b-b b-b-solid'>Out</p>
                     <p class='text-lg my-0'>{mtr(state.clockOut)}</p>
                 </div>
             </div>

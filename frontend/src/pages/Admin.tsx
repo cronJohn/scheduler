@@ -119,7 +119,7 @@ const Admin: Component = () => {
             <Show when={currentSelection.userId && !schedules.loading}>
                 <For each={Object.entries(groupSchedulesByWeek(schedules() || []))}>
                 {([weekStartDate, weekEntries]) => (
-                    <div class='mx-auto mb-30px w-45vw bg-offDark px-5 py-4 rounded font-norm'>
+                    <div class='mx-auto mb-30px min-w-650px w-50vw bg-offDark px-5 py-4 rounded font-norm'>
                         <h1 class='mb-2 mt-0'><span class='underline underline-offset-5'>Week of: {fmtDate(weekStartDate)}</span>
                             <span class='text-lg font-light ml-10px'>(Total Hours: {calculateTotalWeekHours(weekEntries)})</span>
                         </h1>

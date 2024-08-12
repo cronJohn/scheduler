@@ -33,21 +33,21 @@ export const AddEntryModal: Component<{
             closeOnOutsideClick
             overlayStyle={{ "background-color": 'rgba(14, 14, 14, 0.7)' }}
         >
-            <div class="w-25vw">
+            <div class="w-360px ">
                 <h2 class='font-norm font-medium text-3xl text-light text-center'>Add time entry</h2>
-                <div class="flex flex-col justify-center items-center gap-4 text-2xl font-code text-light color-light text-center">
+                <div class="flex flex-col justify-center items-center gap-4 text-2xl text-light color-light text-center">
                     {/* User ID Input */}
                     <section class="flex flex-col items-center sw">
                         <div class="flex items-center w-full">
                             <label for="user_id" class="text-2xl font-code">User ID: </label>
                             <input 
                                 type="checkbox" 
-                                class="ml-8px " 
+                                class="ml-8px font-code" 
                                 id="toggle" 
                                 onChange={() => setIsSelectDisabled(!isSelectDisabled())} 
                                 checked={isSelectDisabled()}
                             />
-                            <label for="toggle" class="ml-2 text-lg">Use Selection</label>
+                            <label for="toggle" class="ml-2 font-code text-lg">Use Selection</label>
                         </div>
                         <SelectUser
                             width="100%"
@@ -59,37 +59,37 @@ export const AddEntryModal: Component<{
 
                     {/* Day Input */}
                     <section class="flex justify-between items-center sw">
-                        <label for="day" class="">Day:</label>
+                        <label for="day" class="font-code ">Day:</label>
                         <input
                             id="day"
                             type="date"
                             value={state.day}
                             onInput={(e) => setState("day", e.currentTarget.value)}
-                            class="py-2 px-4 border-2 border-solid border-primary rounded bg-offDark text-2xl text-white text-center iw"
+                            class="py-2 px-4 b-2 b-solid b-primary rounded bg-offDark text-2xl text-white text-center iw"
                         />
                     </section>
 
                     {/* Clock In Time Input */}
                     <section class="flex justify-between items-center sw">
-                        <label for="clock_in" class="">Clock In:</label>
+                        <label for="clock_in" class="font-code ">Clock In:</label>
                         <input
                             id="clock_in"
                             type="time"
                             value={state.clockIn}
                             onInput={(e) => setState("clockIn", e.currentTarget.value)}
-                            class="py-2 px-4 border-2 border-solid border-primary rounded bg-offDark text-2xl text-white text-center iw"
+                            class="py-2 px-4 b-2 b-solid b-primary rounded bg-offDark text-2xl text-white text-center iw"
                         />
                     </section>
 
                     {/* Clock Out Time Input */}
                     <section class="flex justify-between items-center sw">
-                        <label for="clock_out" class="">Clock Out:</label>
+                        <label for="clock_out" class="font-code ">Clock Out:</label>
                         <input
                             id="clock_out"
                             type="time"
                             value={state.clockOut}
                             onInput={(e) => setState("clockOut", e.currentTarget.value)}
-                            class="py-2 px-4 border-2 border-solid border-primary rounded bg-offDark text-2xl text-white text-center iw"
+                            class="py-2 px-4 b-2 b-solid b-primary rounded bg-offDark text-2xl text-white text-center iw"
                         />
                     </section>
                     
