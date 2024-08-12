@@ -17,11 +17,14 @@ export const nearestStartOfWeek = (dateString: string, targetDayOfWeek: number):
     }
 
     const date = new Date(dateString);
-    const currentDayOfWeek = date.getDay();
+    const currentDayOfWeek = date.getUTCDay();
 
-    const diff = targetDayOfWeek - currentDayOfWeek;
+    let diff = targetDayOfWeek - currentDayOfWeek;
 
-    date.setUTCDate(date.getUTCDate() + diff <= 0 ? diff : diff - 7);
+    if (diff > 0) { diff -= 7 }
+
+    date.setUTCDate(date.getUTCDate() + diff);
+
     return date.toISOString().split('T')[0]; // Return the date in YYYY-MM-DD format
 };
 
@@ -29,8 +32,8 @@ export const groupSchedulesByWeek = (schedules: TimeEntry[]): WeekSchedule => {
     const weekMap: WeekSchedule = {};
 
     schedules.forEach(schedule => {
-        const weekStartDate = nearestStartOfWeek(schedule.day, Number(import.meta.env.VITE_WEEK_START) || 0);
-        const dayOfWeek = new Date(schedule.day).getDay();
+        const weekStartDate = nearestStartOfWeek(schedule.day, Number(import.meta.env.VITE_WEEK_START) || 3);
+        const dayOfWeek = new Date(schedule.day).getUTCDay();
 
         if (!weekMap[weekStartDate]) {
             weekMap[weekStartDate] = {};
