@@ -46,8 +46,8 @@ func (s *Server) Start() error {
 	handlers := handlers.NewHandler(dbHandle)
 
 	// Auth
-	s.mux.HandleFunc("POST /api/login", handlers.Login)
-	s.mux.HandleFunc("GET /checkauth", handlers.CheckAuth)
+	s.mux.HandleFunc("POST /api/auth/login", handlers.Login)
+	s.mux.HandleFunc("GET /api/auth/check", handlers.CheckAuth)
 
 	// API/data handlers
 	s.mux.HandleFunc("POST /api/users", middleware.Log(handlers.CreateUser))
@@ -56,11 +56,11 @@ func (s *Server) Start() error {
 	s.mux.HandleFunc("DELETE /api/users/{id}", middleware.Log(handlers.DeleteUser))
 
 	s.mux.HandleFunc("GET /api/schedules", middleware.Auth(handlers.GetAllSchedules))
-	s.mux.HandleFunc("GET /api/users/{id}/schedule", middleware.Log(handlers.GetUserSchedules))
-	s.mux.HandleFunc("POST /api/users/{id}/schedule", middleware.Auth(handlers.CreateUserSchedule))
-	s.mux.HandleFunc("PUT /api/users/schedule", middleware.Auth(handlers.UpdateUserSchedule))
+	s.mux.HandleFunc("GET /api/users/{id}/schedules", middleware.Log(handlers.GetUserSchedules))
+	s.mux.HandleFunc("POST /api/users/{id}/schedules", middleware.Auth(handlers.CreateUserSchedule))
+	s.mux.HandleFunc("PUT /api/users/schedules", middleware.Auth(handlers.UpdateUserSchedule))
 	s.mux.HandleFunc(
-		"DELETE /api/users/schedule/{id}",
+		"DELETE /api/users/schedules/{id}",
 		middleware.Auth(handlers.DeleteUserSchedule),
 	)
 
