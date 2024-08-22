@@ -13,6 +13,8 @@ import Login from './pages/Login';
 import Admin from './pages/Admin';
 import Overview from './pages/Overview';
 import Unknown from './pages/Unknown';
+import Users from './pages/Users';
+import { RouteGuard } from './components/RouteGuard';
 
 const root = document.getElementById('root');
 
@@ -28,8 +30,22 @@ render(
             <Route path="/" component={Home} />
             <Route path="/schedules" component={Schedules} />
             <Route path="/login" component={Login} />
-            <Route path="/admin" component={Admin} />
-            <Route path="/overview" component={Overview} />
+            {/* Use RouteGuard for protected routes */}
+            <Route path="/admin" component={() => (
+                <RouteGuard>
+                    <Admin />
+                </RouteGuard>
+            )} />
+            <Route path="/overview" component={() => (
+                <RouteGuard>
+                    <Overview />
+                </RouteGuard>
+            )} />
+            <Route path="/users" component={() => (
+                <RouteGuard>
+                    <Users />
+                </RouteGuard>
+            )} />
             <Route path="/*" component={Unknown} />
         </Router>
     ),

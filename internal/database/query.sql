@@ -1,6 +1,19 @@
+-- name: CreateUser :exec
+INSERT INTO users (id, name, role)
+VALUES (?, ?, ?);
+
 -- name: GetUsers :many
 SELECT *
 FROM users;
+
+-- name: UpdateUserByID :exec
+UPDATE users
+SET name = ?, role = ?
+WHERE id = ?;
+
+-- name: DeleteUserByID :exec
+DELETE FROM users
+WHERE id = ?;
 
 -- name: GetSchedulesByUserID :many
 SELECT id, day, clockIn, clockOut

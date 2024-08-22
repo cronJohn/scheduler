@@ -11,9 +11,8 @@ export const SchedulesOverview: Component<{
     const [allSchedules] = createResource(() => fetchAllSchedules(navigate));
 
     const weekDates = createMemo(() => {
-        const startDate = props.week();
         return [0, 1, 2, 3, 4, 5, 6].map(offset => {
-            const date = getDateWithOffset(startDate || getDateISO(), offset);
+            const date = getDateWithOffset(props.week() || getDateISO(), offset);
             return {
                 dayName: itd(new Date(date).getUTCDay()),
                 date: date,

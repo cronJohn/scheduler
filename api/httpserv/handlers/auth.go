@@ -31,6 +31,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CheckAuth(w http.ResponseWriter, r *http.Request) {
+	log.Info().Msg("Checking user auth...")
 	cookie, err := r.Cookie("auth")
 	if err != nil || cookie.Value != os.Getenv("SS_CK") {
 		log.Error().Msg("User is not authorized")

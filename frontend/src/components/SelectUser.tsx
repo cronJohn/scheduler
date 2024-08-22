@@ -1,5 +1,6 @@
 import { Component, For, createResource } from "solid-js";
 import { fetchUsers } from "../utils/api";
+import { useNavigate } from "@solidjs/router";
 
 export const SelectUser: Component<{
     setFn: (input: string) => void;
@@ -8,7 +9,8 @@ export const SelectUser: Component<{
     autofocus?: boolean
     placeholder?: string
 }> = (props) => {
-    const [users] = createResource(fetchUsers);
+    const navigate = useNavigate();
+    const [users] = createResource(() => fetchUsers(navigate));
     return (
         <>
             <input

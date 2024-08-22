@@ -21,6 +21,36 @@ type (
 	}
 )
 
+func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var req struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+		Role string `json:"role"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Error().Msgf("Failed to decode request body: %v", err)
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	err := h.db.CreateUser(ctx, sqlc.CreateUserParams{
+		ID:   req.ID,
+		Name: req.Name,
+		Role: req.Role,
+	})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Error().Msgf("Failed to get users: %v", err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
 func (h *Handler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -43,6 +73,56 @@ func (h *Handler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
+func (h *Handler) UpdateUser(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var req struct {
+		Name string `json:"name"`
+		Role string `json:"role"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Error().Msgf("Failed to decode request body: %v", err)
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	err := h.db.UpdateUserByID(ctx, sqlc.UpdateUserByIDParams{
+		ID:   r.PathValue("id"),
+		Name: req.Name,
+		Role: req.Role,
+	})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Error().Msgf("Failed to get users: %v", err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *Handler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	userID := r.PathValue("id")
+	if userID == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Error().Msg("User ID is missing in request")
+		return
+	}
+
+	err := h.db.DeleteUserByID(ctx, userID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Error().Msgf("Failed to get user schedules: %v", err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
 func (h *Handler) GetUserSchedules(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -62,7 +142,7 @@ func (h *Handler) GetUserSchedules(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(schedules) == 0 {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusOK)
 		log.Info().Msgf("No schedules found for user '%v'", userID)
 		return
 	}

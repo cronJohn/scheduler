@@ -54,3 +54,6 @@ export const groupSchedulesByWeek = (schedules: TimeEntry[]): WeekSchedule => {
     return weekMap;
 };
 
+export function isUserAuthenticated(): boolean {
+    return document.cookie.split(';').some(cookie => cookie.trim().startsWith(`auth=`));
+}

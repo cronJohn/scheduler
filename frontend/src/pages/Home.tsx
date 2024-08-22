@@ -9,6 +9,7 @@ const Home: Component = () => {
                 <a href="/schedules" class="w-170px bg-offDark text-primary py-2 px-4 rounded hover:bg-opacity-75">View schedules</a>
                 <a href="/admin" class="w-170px bg-offDark text-primary py-2 px-4 rounded hover:bg-opacity-75">Admin stuff</a>
                 <a href="/overview" class="w-170px bg-offDark text-primary py-2 px-4 rounded hover:bg-opacity-75">Overview</a>
+                <a href="/users" class="w-170px bg-offDark text-primary py-2 px-4 rounded hover:bg-opacity-75">Manage users</a>
             </div>
         </div>
     );

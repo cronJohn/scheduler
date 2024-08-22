@@ -1,5 +1,5 @@
-import { For, Show, createResource, createSignal, onMount, type Component } from 'solid-js';
-import { fetchUserSchedules, updateExistingSchedule, deleteExistingSchedule, createNewSchedule, NewScheduleData, UpdateScheduleData, DeleteScheduleData } from '../utils/api';
+import { For, Show, createResource, createSignal, type Component } from 'solid-js';
+import { fetchUserSchedules, updateExistingSchedule, deleteExistingSchedule, createNewSchedule, NewScheduleData, UpdateScheduleData } from '../utils/api';
 import { fmtDate, itd } from '../utils/conv';
 import { TimeSlot } from '../components/TimeSlot';
 import { createStore, produce } from 'solid-js/store';
@@ -13,13 +13,6 @@ import { useNavigate } from '@solidjs/router';
 
 const Admin: Component = () => {
     const navigate = useNavigate();
-
-    onMount(async () => {
-        const resp = await fetch(`${import.meta.env.VITE_SERV}/api/checkauth`);
-        if (!resp.ok) {
-            navigate('/login');
-        }
-    })
 
     const [isTimeSlotModalOpen, setIsTimeSlotModalOpen] = createSignal<boolean>(false);
     const [isAddEntryModalOpen, setIsAddEntryModalOpen] = createSignal<boolean>(false);
@@ -94,10 +87,10 @@ const Admin: Component = () => {
         }
     };
 
-    const handleDeleteExistingSchedule = async (data: DeleteScheduleData) => {
+    const handleDeleteExistingSchedule = async (entryId: number) => {
         try {
             if (!currentSelection) return;
-            await deleteExistingSchedule(data, navigate);
+            await deleteExistingSchedule(entryId, navigate);
             refetch();
             setIsTimeSlotModalOpen(false);
         } catch (error) {
@@ -154,7 +147,7 @@ const Admin: Component = () => {
                 clockOut: currentSelection.clockOut
             })}
             handleUpdate={(data: UpdateScheduleData) => handleUpdateExistingSchedule(data)}
-            handleDelete={(data: DeleteScheduleData) => handleDeleteExistingSchedule(data)}/>
+            handleDelete={(entryId: number) => handleDeleteExistingSchedule(entryId)}/>
 
             <AddEntryModal isModalOpen={isAddEntryModalOpen} closeModal={() => setIsAddEntryModalOpen(false)} 
             getStateFn={() => currentSelection}
