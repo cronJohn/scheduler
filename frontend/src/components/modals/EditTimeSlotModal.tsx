@@ -3,14 +3,14 @@ import { Component, createEffect } from "solid-js";
 import { fmtMT } from '../../utils/conv';
 import { TimeEntry } from "../../utils/types";
 import { createStore } from "solid-js/store";
-import { DeleteScheduleData, UpdateScheduleData } from "../../utils/api";
+import { UpdateScheduleData } from "../../utils/api";
 
 export const EditTimeSlotModal: Component<{
     isModalOpen: () => boolean;
     closeModal: () => void;
     getStateFn: () => TimeEntry;
     handleUpdate: (data: UpdateScheduleData) => void;
-    handleDelete: (data: DeleteScheduleData) => void;
+    handleDelete: (entryId: number) => void;
 }> = (props) => {
     const [state, setState] = createStore<TimeEntry>({
         id: props.getStateFn().id,
@@ -81,7 +81,7 @@ export const EditTimeSlotModal: Component<{
                 </button>
                 <button
                     class="bg-red text-lg text-dark font-code rounded px-4 py-2"
-                    onClick={() => props.handleDelete({ entryId: state.id })}
+                    onClick={() => props.handleDelete(state.id)}
                 >
                     Delete
                 </button>
