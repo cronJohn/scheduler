@@ -1,5 +1,5 @@
 import Modal from "@lutaok/solid-modal";
-import { Component, For } from "solid-js";
+import { Component, For, createEffect } from "solid-js";
 import { createStore } from "solid-js/store";
 import { UserResponse } from "../../utils/types";
 
@@ -14,6 +14,16 @@ export const AddUserModal: Component<{
         name: "",
         role: props.roles?.[0] || "inshop",
     })
+
+    createEffect(() => {
+        if (props.isModalOpen()) {
+            setState({
+                id: "",
+                name: "",
+                role: props.roles?.[0] || "inshop",
+            });
+        }
+    });
 
     return (
         <Modal
