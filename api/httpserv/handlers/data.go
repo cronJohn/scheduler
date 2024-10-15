@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -12,24 +13,13 @@ import (
 	"github.com/cronJohn/scheduler/internal/database/sqlc"
 )
 
-type (
-	timeEntry struct {
-		Id       int64  `json:"id"`
-		Day      string `json:"day"`
-		ClockIn  string `json:"clockIn"`
-		ClockOut string `json:"clockOut"`
-	}
-)
-
 func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	var req struct {
-		ID   string `json:"id"`
-		Name string `json:"name"`
-		Role string `json:"role"`
-	}
+	var req sqlc.CreateUserParams
+
+	req.ID = strings.TrimSpace(r.PathValue("id")) // strip whitespace as 'id' and ' id' are treated the same which shouldn't be allowed
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Error().Msgf("Failed to decode request body: %v", err)
@@ -37,16 +27,14 @@ func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.db.CreateUser(ctx, sqlc.CreateUserParams{
-		ID:   req.ID,
-		Name: req.Name,
-		Role: req.Role,
-	})
+	err := h.db.CreateUser(ctx, req)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error().Msgf("Failed to get users: %v", err)
+		log.Error().Msgf("Failed to create user: %v", err)
 		return
 	}
+
+	log.Debug().Str("UserID", req.ID).Str("UserName", req.Name).Msg("User created")
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -77,10 +65,9 @@ func (h *Handler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	var req struct {
-		Name string `json:"name"`
-		Role string `json:"role"`
-	}
+	var req sqlc.UpdateUserByIDParams
+
+	req.ID = strings.TrimSpace(r.PathValue("id"))
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Error().Msgf("Failed to decode request body: %v", err)
@@ -88,16 +75,14 @@ func (h *Handler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.db.UpdateUserByID(ctx, sqlc.UpdateUserByIDParams{
-		ID:   r.PathValue("id"),
-		Name: req.Name,
-		Role: req.Role,
-	})
+	err := h.db.UpdateUserByID(ctx, req)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error().Msgf("Failed to get users: %v", err)
+		log.Error().Msgf("Failed to update user: %v", err)
 		return
 	}
+
+	log.Debug().Str("UserID", req.ID).Str("NewName", req.Name).Msg("User updated")
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -106,7 +91,7 @@ func (h *Handler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	userID := r.PathValue("id")
+	userID := strings.TrimSpace(r.PathValue("id"))
 	if userID == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Error().Msg("User ID is missing in request")
@@ -116,9 +101,11 @@ func (h *Handler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	err := h.db.DeleteUserByID(ctx, userID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error().Msgf("Failed to get user schedules: %v", err)
+		log.Error().Msgf("Failed to delete user: %v", err)
 		return
 	}
+
+	log.Debug().Str("UserID", userID).Msg("User deleted")
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -127,8 +114,8 @@ func (h *Handler) GetUserSchedules(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	userID := r.PathValue("id")
-	if userID == "" {
+	userID := strings.TrimSpace(r.PathValue("id"))
+	if userID == "" || userID == "\x00" {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Error().Msg("User ID is missing in request")
 		return
@@ -147,13 +134,14 @@ func (h *Handler) GetUserSchedules(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var entries []timeEntry
+	var entries []sqlc.GetSchedulesByUserIDRow
 	for _, sch := range schedules {
-		entries = append(entries, timeEntry{
-			Id:       sch.ID,
+		entries = append(entries, sqlc.GetSchedulesByUserIDRow{
+			ID:       sch.ID,
+			Role:     sch.Role,
 			Day:      sch.Day,
-			ClockIn:  sch.Clockin,
-			ClockOut: sch.Clockout,
+			Clockin:  sch.Clockin,
+			Clockout: sch.Clockout,
 		})
 	}
 
@@ -194,11 +182,7 @@ func (h *Handler) CreateUserSchedule(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	var req struct {
-		Day      string `json:"day"`
-		ClockIn  string `json:"clockIn"`
-		ClockOut string `json:"clockOut"`
-	}
+	var req sqlc.CreateScheduleParams
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Error().Msgf("Failed to decode request body: %v", err)
@@ -206,19 +190,16 @@ func (h *Handler) CreateUserSchedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := r.PathValue("id")
-	if userID == "" {
+	userID := strings.TrimSpace(r.PathValue("id"))
+	if userID == "" || userID == "\x00" {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Error().Msg("User ID is missing in request")
 		return
 	}
 
-	err := h.db.CreateSchedule(ctx, sqlc.CreateScheduleParams{
-		Userid:   userID,
-		Day:      req.Day,
-		Clockin:  req.ClockIn,
-		Clockout: req.ClockOut,
-	})
+	req.Userid = userID
+
+	err := h.db.CreateSchedule(ctx, req)
 	if err != nil {
 		http.Error(w, "Failed to create schedule", http.StatusInternalServerError)
 		return
@@ -231,12 +212,16 @@ func (h *Handler) UpdateUserSchedule(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	var req struct {
-		EntryID  int64  `json:"entryId"`
-		Day      string `json:"day"`
-		ClockIn  string `json:"clockIn"`
-		ClockOut string `json:"clockOut"`
+	var req sqlc.UpdateScheduleTimesParams
+
+	entryID, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		log.Error().Msgf("Invalid entry ID: %v", err)
+		http.Error(w, "Invalid entry ID", http.StatusBadRequest)
+		return
 	}
+
+	req.ID = int64(entryID)
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Error().Msgf("Failed to decode request body: %v", err)
@@ -244,12 +229,7 @@ func (h *Handler) UpdateUserSchedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.db.UpdateScheduleTimes(ctx, sqlc.UpdateScheduleTimesParams{
-		ID:       req.EntryID,
-		Day:      req.Day,
-		Clockin:  req.ClockIn,
-		Clockout: req.ClockOut,
-	})
+	err = h.db.UpdateScheduleTimes(ctx, req)
 	if err != nil {
 		http.Error(w, "Failed to update schedule", http.StatusInternalServerError)
 		return

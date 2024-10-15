@@ -14,7 +14,8 @@ import (
 )
 
 var (
-	dbHandle    *sql.DB
+	dbHandle *sql.DB
+	// changes based on build tags
 	SERVER_HOST string
 )
 
@@ -46,22 +47,22 @@ func (s *Server) Start() error {
 	handlers := handlers.NewHandler(dbHandle)
 
 	// Auth
-	s.mux.HandleFunc("POST /api/auth/login", handlers.Login)
-	s.mux.HandleFunc("GET /api/auth/check", handlers.CheckAuth)
+	s.mux.HandleFunc("POST /api/v1/auth/login", handlers.Login)
+	s.mux.HandleFunc("GET /api/v1/auth/check", handlers.CheckAuth)
 
 	// API/data handlers
-	s.mux.HandleFunc("POST /api/users", middleware.Log(handlers.CreateUser))
-	s.mux.HandleFunc("GET /api/users", middleware.Auth(handlers.GetUsers))
-	s.mux.HandleFunc("PUT /api/users/{id}", middleware.Log(handlers.UpdateUser))
-	s.mux.HandleFunc("DELETE /api/users/{id}", middleware.Log(handlers.DeleteUser))
+	s.mux.HandleFunc("POST /api/v1/users", middleware.Auth(middleware.Log(handlers.CreateUser)))
+	s.mux.HandleFunc("GET /api/v1/users", middleware.Auth(middleware.Log(handlers.GetUsers)))
+	s.mux.HandleFunc("PUT /api/v1/users/{id}", middleware.Auth(middleware.Log(handlers.UpdateUser)))
+	s.mux.HandleFunc("DELETE /api/v1/users/{id}", middleware.Auth(middleware.Log(handlers.DeleteUser)))
 
-	s.mux.HandleFunc("GET /api/schedules", middleware.Auth(handlers.GetAllSchedules))
-	s.mux.HandleFunc("GET /api/users/{id}/schedules", middleware.Log(handlers.GetUserSchedules))
-	s.mux.HandleFunc("POST /api/users/{id}/schedules", middleware.Auth(handlers.CreateUserSchedule))
-	s.mux.HandleFunc("PUT /api/users/schedules", middleware.Auth(handlers.UpdateUserSchedule))
+	s.mux.HandleFunc("GET /api/v1/schedules", middleware.Auth(middleware.Log(handlers.GetAllSchedules)))
+	s.mux.HandleFunc("GET /api/v1/users/{id}/schedules", middleware.Log(handlers.GetUserSchedules))
+	s.mux.HandleFunc("POST /api/v1/users/{id}/schedules", middleware.Auth(middleware.Log(handlers.CreateUserSchedule)))
+	s.mux.HandleFunc("PUT /api/v1/users/schedules/{id}", middleware.Auth(middleware.Log(handlers.UpdateUserSchedule)))
 	s.mux.HandleFunc(
-		"DELETE /api/users/schedules/{id}",
-		middleware.Auth(handlers.DeleteUserSchedule),
+		"DELETE /api/v1/users/schedules/{id}",
+		middleware.Auth(middleware.Log(handlers.DeleteUserSchedule)),
 	)
 
 	// Catch-all route
