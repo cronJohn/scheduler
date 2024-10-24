@@ -51,11 +51,13 @@ func (s *Server) Start() error {
 	s.mux.HandleFunc("GET /api/v1/auth/check", handlers.CheckAuth)
 
 	// API/data handlers
+	// Users
 	s.mux.HandleFunc("POST /api/v1/users", middleware.Auth(middleware.Log(handlers.CreateUser)))
 	s.mux.HandleFunc("GET /api/v1/users", middleware.Auth(middleware.Log(handlers.GetUsers)))
 	s.mux.HandleFunc("PUT /api/v1/users/{id}", middleware.Auth(middleware.Log(handlers.UpdateUser)))
 	s.mux.HandleFunc("DELETE /api/v1/users/{id}", middleware.Auth(middleware.Log(handlers.DeleteUser)))
 
+	// Schedules
 	s.mux.HandleFunc("GET /api/v1/schedules", middleware.Auth(middleware.Log(handlers.GetAllSchedules)))
 	s.mux.HandleFunc("GET /api/v1/users/{id}/schedules", middleware.Log(handlers.GetUserSchedules))
 	s.mux.HandleFunc("POST /api/v1/users/{id}/schedules", middleware.Auth(middleware.Log(handlers.CreateUserSchedule)))

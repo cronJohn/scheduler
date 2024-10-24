@@ -19,11 +19,15 @@ func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	var req sqlc.CreateUserParams
 
-	req.ID = strings.TrimSpace(r.PathValue("id")) // strip whitespace as 'id' and ' id' are treated the same which shouldn't be allowed
-
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Error().Msgf("Failed to decode request body: %v", err)
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if req.UserID == "" {
+		log.Error().Msg("User ID is missing in request")
+		http.Error(w, "User ID is missing in request", http.StatusBadRequest)
 		return
 	}
 
@@ -34,7 +38,7 @@ func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Debug().Str("UserID", req.ID).Str("UserName", req.Name).Msg("User created")
+	log.Debug().Str("UserID", req.UserID).Str("Name", req.Name).Msg("User created")
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -67,7 +71,7 @@ func (h *Handler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	var req sqlc.UpdateUserByIDParams
 
-	req.ID = strings.TrimSpace(r.PathValue("id"))
+	req.UserID = strings.TrimSpace(r.PathValue("id"))
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Error().Msgf("Failed to decode request body: %v", err)
@@ -82,7 +86,7 @@ func (h *Handler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Debug().Str("UserID", req.ID).Str("NewName", req.Name).Msg("User updated")
+	log.Debug().Str("UserID", req.UserID).Str("NewName", req.Name).Msg("User updated")
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -137,11 +141,11 @@ func (h *Handler) GetUserSchedules(w http.ResponseWriter, r *http.Request) {
 	var entries []sqlc.GetSchedulesByUserIDRow
 	for _, sch := range schedules {
 		entries = append(entries, sqlc.GetSchedulesByUserIDRow{
-			ID:       sch.ID,
-			Role:     sch.Role,
-			Day:      sch.Day,
-			Clockin:  sch.Clockin,
-			Clockout: sch.Clockout,
+			ScheduleID: sch.ScheduleID,
+			Role:       sch.Role,
+			Day:        sch.Day,
+			ClockIn:    sch.ClockIn,
+			ClockOut:   sch.ClockOut,
 		})
 	}
 
@@ -197,7 +201,7 @@ func (h *Handler) CreateUserSchedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req.Userid = userID
+	req.UserID = userID
 
 	err := h.db.CreateSchedule(ctx, req)
 	if err != nil {
@@ -221,7 +225,7 @@ func (h *Handler) UpdateUserSchedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req.ID = int64(entryID)
+	req.ScheduleID = int64(entryID)
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Error().Msgf("Failed to decode request body: %v", err)

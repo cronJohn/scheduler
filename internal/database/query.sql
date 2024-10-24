@@ -1,5 +1,5 @@
 -- name: CreateUser :exec
-INSERT INTO users (id, name)
+INSERT INTO users (user_id, name)
 VALUES (?, ?);
 
 -- name: GetUsers :many
@@ -9,31 +9,32 @@ FROM users;
 -- name: UpdateUserByID :exec
 UPDATE users
 SET name = ?
-WHERE id = ?;
+WHERE user_id = ?;
 
 -- name: DeleteUserByID :exec
 DELETE FROM users
-WHERE id = ?;
+WHERE user_id = ?;
 
 -- name: GetSchedulesByUserID :many
-SELECT id, role, day, clockIn, clockOut
+SELECT schedule_id, role, day, clock_in, clock_out
 FROM schedules
-WHERE userId = ?;
+WHERE user_id = ?;
 
 -- name: GetAllSchedules :many
-SELECT users.name, schedules.id, schedules.userId as "userId", schedules.role, schedules.day, schedules.clockIn as "clockIn", schedules.clockOut as "clockOut"
+SELECT schedules.schedule_id, schedules.user_id, schedules.role, schedules.day, 
+schedules.clock_in, schedules.clock_out
 FROM schedules
-JOIN users ON schedules.userId= users.id;
+JOIN users ON schedules.user_id = users.user_id;
 
 -- name: CreateSchedule :exec
-INSERT INTO schedules (userId, role, day, clockIn, clockOut)
+INSERT INTO schedules (user_id, role, day, clock_in, clock_out)
 VALUES (?, ?, ?, ?, ?);
 
 -- name: UpdateScheduleTimes :exec
 UPDATE schedules
-SET day = ?, role = ?, clockIn = ?, clockOut = ?
-WHERE id = ?;
+SET role = ?, day = ?, clock_in = ?, clock_out = ?
+WHERE schedule_id = ?;
 
 -- name: DeleteSchedule :exec
 DELETE FROM schedules
-WHERE id = ?;
+WHERE schedule_id = ?;

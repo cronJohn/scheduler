@@ -10,7 +10,7 @@ import (
 )
 
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("Logging someone in...")
+	log.Info().Msg("Logging someone in...")
 
 	username := r.FormValue("username")
 	password := r.FormValue("password")
@@ -27,7 +27,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		Path:  "/",
 	}
 	http.SetCookie(w, &cookie)
-	log.Info().Msg("User logged in")
+	log.Debug().Msg("User logged in")
 }
 
 func (h *Handler) CheckAuth(w http.ResponseWriter, r *http.Request) {
@@ -39,5 +39,6 @@ func (h *Handler) CheckAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Debug().Msg("User is authorized")
 	w.WriteHeader(http.StatusOK)
 }
