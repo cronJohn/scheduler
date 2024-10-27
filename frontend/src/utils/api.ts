@@ -1,4 +1,4 @@
-import { AllScheduleResponse, NavigateFunction, TimeEntry, UserResponse } from "./types";
+import { NavigateFunction, Schedule, User } from "./types";
 
 const handleResponse = (response: Response, nav: NavigateFunction) => {
     if (response.status === 401) {
@@ -7,13 +7,26 @@ const handleResponse = (response: Response, nav: NavigateFunction) => {
     }
 }
 
-export type NewUserData = {
-    id: string;
-    name: string;
-    role: string;
+export const handleLogin = async (data: FormData): Promise<void | Error> => {
+    const response = await fetch(`${import.meta.env.VITE_SERV}/api/v1/auth/login`, {
+        method: 'POST',
+        body: data,
+        credentials: 'include', // need this for cookies to be set
+    });
+
+    if (!response.ok) {
+        return new Error("Invalid username or password");
+    }
+
+    return;
 }
-export const createNewUser = async (data: NewUserData, nav: NavigateFunction) => {
-    const response = await fetch(`${import.meta.env.VITE_SERV}/api/users`, {
+
+export type CreateNewUserRequestData = {
+    userId: string;
+    name: string;
+}
+export const createNewUser = async (data: CreateNewUserRequestData, nav: NavigateFunction) => {
+    const response = await fetch(`${import.meta.env.VITE_SERV}/api/v1/users`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -24,9 +37,9 @@ export const createNewUser = async (data: NewUserData, nav: NavigateFunction) =>
     handleResponse(response, nav);
 }
 
-export const fetchUsers = async (nav: NavigateFunction): Promise<UserResponse[]> => {
+export const fetchUsers = async (nav: NavigateFunction): Promise<User[]> => {
     try {
-        const response = await fetch(`${import.meta.env.VITE_SERV}/api/users`);
+        const response = await fetch(`${import.meta.env.VITE_SERV}/api/v1/users`);
         if (response.ok) {
             return response.json();
         }
@@ -38,19 +51,21 @@ export const fetchUsers = async (nav: NavigateFunction): Promise<UserResponse[]>
     }
 }
 
-export type UpdateUserData = {
+export type UpdateUserRequestData = {
+    userId: string;
     name: string;
-    role: string;
 }
-export const updateExistingUser = async (userId: string, data: UpdateUserData, nav: NavigateFunction) => {
-    if (!userId) return;
+export const updateExistingUser = async (data: UpdateUserRequestData, nav: NavigateFunction) => {
+    if (!data.userId) return;
 
-    const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/${userId}`, {
+    const { userId, ...requestBodyData } = data;
+
+    const response = await fetch(`${import.meta.env.VITE_SERV}/api/v1/users/${userId}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(requestBodyData),
     });
 
     handleResponse(response, nav);
@@ -59,17 +74,17 @@ export const updateExistingUser = async (userId: string, data: UpdateUserData, n
 export const deleteExistingUser = async (userId: string, nav: NavigateFunction) => {
     if (!userId) return;
 
-    const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/${userId}`, {
+    const response = await fetch(`${import.meta.env.VITE_SERV}/api/v1/users/${userId}`, {
         method: 'DELETE',
     });
 
     handleResponse(response, nav);
 }
 
-export const fetchUserSchedules = async (userId: string): Promise<TimeEntry[]> => {
+export const fetchUserSchedules = async (userId: string): Promise<Schedule[]> => {
     if (!userId) return [];
     try {
-        const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/${userId}/schedules`);
+        const response = await fetch(`${import.meta.env.VITE_SERV}/api/v1/users/${userId}/schedules`);
         
         if (!response.ok) { return []; }
 
@@ -79,7 +94,7 @@ export const fetchUserSchedules = async (userId: string): Promise<TimeEntry[]> =
             return [];
         }
         
-        const data: TimeEntry[] = await response.json();
+        const data: Schedule[] = await response.json();
 
         if (Array.isArray(data) && data.length === 0) {
             console.log("No schedules found for the user.");
@@ -94,9 +109,9 @@ export const fetchUserSchedules = async (userId: string): Promise<TimeEntry[]> =
     }
 }
 
-export const fetchAllSchedules = async (nav: NavigateFunction): Promise<AllScheduleResponse> => {
+export const fetchAllSchedules = async (nav: NavigateFunction): Promise<Schedule[]> => {
     try {
-        const response = await fetch(`${import.meta.env.VITE_SERV}/api/schedules`);
+        const response = await fetch(`${import.meta.env.VITE_SERV}/api/v1/schedules`);
         if (response.ok) {
             return response.json();
         }
@@ -108,43 +123,50 @@ export const fetchAllSchedules = async (nav: NavigateFunction): Promise<AllSched
     }
 }
 
-export type NewScheduleData = {
+export type CreateNewScheduleRequestData = {
+    userId: string;
+    role: string;
     day: string;
     clockIn: string;
     clockOut: string;
 }
-export const createNewSchedule = async (user_id: string, data: NewScheduleData, nav: NavigateFunction) => {
-    const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/${user_id}/schedules`, {
+export const createNewSchedule = async (data: CreateNewScheduleRequestData, nav: NavigateFunction) => {
+    const { userId, ...requestBodyData } = data;
+
+    const response = await fetch(`${import.meta.env.VITE_SERV}/api/v1/users/${userId}/schedules`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(requestBodyData),
     });
 
     handleResponse(response, nav);
 }
 
-export type UpdateScheduleData = {
-    entryId: number;
+export type UpdateScheduleRequestData = {
+    scheduleId: number;
     day: string;
+    role: string;
     clockIn: string;
     clockOut: string;
 }
-export const updateExistingSchedule = async (data: UpdateScheduleData, nav: NavigateFunction) => {
-    const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/schedules`, {
+export const updateExistingSchedule = async (data: UpdateScheduleRequestData, nav: NavigateFunction) => {
+    const { scheduleId, ...requestBodyData } = data;
+
+    const response = await fetch(`${import.meta.env.VITE_SERV}/api/v1/users/schedules/${scheduleId}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(requestBodyData),
     });
 
     handleResponse(response, nav);
 }
 
-export const deleteExistingSchedule = async (entryId: number, nav: NavigateFunction) => {
-    const response = await fetch(`${import.meta.env.VITE_SERV}/api/users/schedules/${entryId}`, {
+export const deleteExistingSchedule = async (scheduleId: number, nav: NavigateFunction) => {
+    const response = await fetch(`${import.meta.env.VITE_SERV}/api/v1/users/schedules/${scheduleId}`, {
         method: 'DELETE',
     });
 

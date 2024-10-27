@@ -1,14 +1,29 @@
-import { Component, For, Show, createMemo, createResource } from "solid-js";
+import { Component, For, Show, createEffect, createMemo, createResource } from "solid-js";
 import { itd, mtr } from "../utils/conv";
 import { fetchAllSchedules } from "../utils/api";
 import { getDateISO, getDateWithOffset } from "../utils/helper";
 import { useNavigate } from "@solidjs/router";
+import { createStore } from "solid-js/store";
+import { Schedule } from "../utils/types";
 
 export const SchedulesOverview: Component<{
     week: () => string | undefined;
 }> = (props) => {
     const navigate = useNavigate();
     const [allSchedules] = createResource(() => fetchAllSchedules(navigate));
+    const [selectedSchedule, setSelectedSchedule] = createStore<Schedule>({
+        userId: "",
+        scheduleId: 0,
+        day: "",
+        role: "",
+        clockIn: "",
+        clockOut: "",
+    });
+
+    createEffect(() => {
+        console.log('user id', selectedSchedule.userId);
+        console.log('schedule id', selectedSchedule.scheduleId);
+    })
 
     const weekDates = createMemo(() => {
         return [0, 1, 2, 3, 4, 5, 6].map(offset => {
@@ -35,7 +50,7 @@ export const SchedulesOverview: Component<{
                     </tr>
                 </thead>
                 <tbody>
-                    {["inshop", "driver", "manager"].map((role) => (
+                    {Array.from(new Set(allSchedules()?.map(schedule => schedule.role))).map((role) => ( // Get all unique roles
                         <>
                             <tr>
                                 <td colspan={7} class="ol outline-solid outline-white print-outline-dark bg-black print-bg-white p-2 font-bold text-xl text-primary">
@@ -62,9 +77,11 @@ export const SchedulesOverview: Component<{
                                                             <div class="ol outline-solid outline-white print-outline-dark">
                                                                 <For each={amSchedules}>
                                                                     {(schedule) => (
-                                                                        <div class="p-2 flex ol even-outline-0px outline-solid outline-white print-outline-dark items-center flex-justify-between">
+                                                                        <div class="p-2 flex ol even-outline-0px outline-solid outline-white print-outline-dark items-center flex-justify-between"
+                                                                        onMouseEnter={() => setSelectedSchedule(schedule)}
+                                                                        onMouseLeave={() => setSelectedSchedule({})}>
                                                                             <div class="pr-2 outline-none b-r-1px b-r-solid print-border-dark">
-                                                                                {schedule.name}
+                                                                                {schedule.userId}
                                                                             </div>
                                                                             <div class="pl-auto">
                                                                                 {mtr(schedule.clockIn)} - {mtr(schedule.clockOut)}
@@ -81,9 +98,11 @@ export const SchedulesOverview: Component<{
                                                             <div class="ol outline-solid outline-white print-outline-dark">
                                                                 <For each={pmSchedules}>
                                                                     {(schedule) => (
-                                                                        <div class="p-2 flex ol even-outline-0px outline-solid outline-white print-outline-dark items-center flex-justify-between">
+                                                                        <div class="p-2 flex ol even-outline-0px outline-solid outline-white print-outline-dark items-center flex-justify-between"
+                                                                        onMouseEnter={() => setSelectedSchedule(schedule)}
+                                                                        onMouseLeave={() => setSelectedSchedule({})}>
                                                                             <div class="pr-2 outline-none b-r-1px b-r-solid print-border-dark">
-                                                                                {schedule.name}
+                                                                                {schedule.userId}
                                                                             </div>
                                                                             <div class="pl-auto">
                                                                                 {mtr(schedule.clockIn)} - {mtr(schedule.clockOut)}

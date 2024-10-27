@@ -1,6 +1,7 @@
 import { useNavigate } from '@solidjs/router';
 import { Show, createSignal, type Component } from 'solid-js';
 import { NavBar } from '../components/NavBar';
+import { handleLogin } from '../utils/api';
 
 const Login: Component = () => {
     const navigate = useNavigate();
@@ -10,28 +11,12 @@ const Login: Component = () => {
         event.preventDefault();
 
         const formData = new FormData(event.target as HTMLFormElement);
-        let response: Response;
+        const error = await handleLogin(formData);
 
-        try {
-            response = await fetch(`${import.meta.env.VITE_SERV}/api/auth/login`, {
-                method: 'POST',
-                body: formData,
-                credentials: 'include', // need this for cookies to be set
-            });
-
-            if (!response.ok) {
-                throw new Error("Invalid username or password");
-            }
-
-            navigate('/');
-        } catch (error) {
+        if (error) {
             console.error('Error during login:', error);
-            if (error instanceof Error) {
-                setError(error);
-            } else {
-                setError(new Error('An unknown error occurred during login'));
-            }
-        }
+            setError(error);
+        } else {navigate('/');}
     };
 
     return (

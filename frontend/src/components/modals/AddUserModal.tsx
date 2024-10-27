@@ -1,29 +1,43 @@
 import Modal from "@lutaok/solid-modal";
-import { Component, For, createEffect } from "solid-js";
+import { Component, Show, createEffect, createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
-import { UserResponse } from "../../utils/types";
+import { User } from "../../utils/types";
 
 export const AddUserModal: Component<{
     isModalOpen: () => boolean;
     closeModal: () => void;
-    handleAddFn: (data: UserResponse) => void;
-    roles?: string[];
+    handleAddFn: (data: User) => void;
 }> = (props) => {
-    const [state, setState] = createStore<UserResponse>({
-        id: "",
+    const [state, setState] = createStore<User>({
+        userId: "",
         name: "",
-        role: props.roles?.[0] || "inshop",
     })
+
+    const [formError, setFormError] = createSignal(false)
 
     createEffect(() => {
         if (props.isModalOpen()) {
             setState({
-                id: "",
+                userId: "",
                 name: "",
-                role: props.roles?.[0] || "inshop",
             });
         }
     });
+
+    function getErrorMessage() {
+        var errorsBuf: string[] = [];
+        if (!state.userId) {errorsBuf.push("user id")}
+        if (!state.name) {errorsBuf.push("name")}
+
+        // Clear error display after a while
+        setTimeout(() => {
+            setFormError(false);
+        }, 2000);
+
+        return errorsBuf.length == 2
+            ? `⚠️ ${errorsBuf[0]} and ${errorsBuf[1]} must be filled in ⚠️` 
+            : `⚠️ ${errorsBuf[0]} must be filled in ⚠️`;
+    }
 
     return (
         <Modal
@@ -38,19 +52,19 @@ export const AddUserModal: Component<{
                 onKeyDown={(e) => e.key === 'Enter' && props.handleAddFn(state)}>
                     {/* User ID Input */}
                    <section class="flex justify-between items-center w-80%">
-                        <label for="userId" class="font-code ">Id:</label>
+                        <label for="userId" class="font-code ">Id</label>
                         <input
                             id="userId"
                             type="text"
                             placeholder="Enter ID"
-                            onInput={(e) => setState("id", e.currentTarget.value)}
+                            onInput={(e) => setState("userId", e.currentTarget.value)}
                             class="py-2 px-4 b-2 b-solid b-primary rounded bg-offDark text-2xl text-white text-center iw"
                         />
                     </section>
                     
                     {/* User Name Input */}
                    <section class="flex justify-between items-center w-80%">
-                        <label for="userName" class="font-code ">Name:</label>
+                        <label for="userName" class="font-code ">Name</label>
                         <input
                             id="userName"
                             type="text"
@@ -59,29 +73,18 @@ export const AddUserModal: Component<{
                             class="py-2 px-4 b-2 b-solid b-primary rounded bg-offDark text-2xl text-white text-center iw"
                         />
                     </section>
-
-                    {/* User Role Input */}
-                   <section class="flex justify-between items-center w-80%">
-                        <label for="userRole" class="font-code ">Role:</label>
-
-                        <select 
-                            id="userRole"
-                            class="text-light font-code text-xl px-4 b-none py-2 min-w-0 iw h-52px"
-                            onChange={(e) => setState("role", e.currentTarget.value)}
-                        >
-                            <For each={props.roles}>
-                                {(role) => (
-                                    <option value={role}>{role}</option>
-                                )}
-                            </For>
-                        </select>
-                    </section>
-
                     <button
-                        class="nm text-5 text-primary font-code rounded hover:bg-slightDark mt-4 px-4 py-2 w-100px"
-                        onClick={() => {props.handleAddFn(state)}}
+                        class="nm text-5 text-primary font-code rounded mt-4 px-4 py-2 w-100px
+                               transition-transform transform hover:scale-105 hover:bg-slightDark hover:shadow-lg"
+                        onClick={() => {
+                            if (!state.name || !state.userId){setFormError(true); return}
+                            props.handleAddFn(state);
+                        }}
                     >Add
                     </button>
+                    <Show when={formError()}>
+                        <p class="text-[red] px-2 py-2 nm text-lg font-norm" style={{"text-transform": "capitalize"}}>{getErrorMessage()}</p>
+                    </Show>
                 </div>
             </div>
         </Modal>

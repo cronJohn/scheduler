@@ -1,37 +1,57 @@
-import { For, Show, createResource, createSignal, type Component } from 'solid-js';
+import { For, Show, createResource, createSignal, onCleanup, onMount, type Component } from 'solid-js';
 import { createNewUser, deleteExistingUser, fetchUsers, updateExistingUser } from '../utils/api';
 import { NavBar } from '../components/NavBar';
-import { UserResponse } from '../utils/types';
 import { useNavigate } from '@solidjs/router';
 import { AddUserModal } from '../components/modals/AddUserModal';
+import { User } from '../utils/types';
 
 const Users: Component = () => {
     const navigate = useNavigate();
     const [users, { refetch }] = createResource(() => fetchUsers(navigate));
-    const roles = ['inshop', 'driver', 'manager'];
     const [entryIndex, setEntryIndex] = createSignal<number>();
     const [isAddUserModalOpen, setIsAddUserModalOpen] = createSignal(false);
 
-    const getRowValue = (index: number | undefined): UserResponse | null => {
+    const shortcuts: {
+        [key: string]: () => void;
+    }= {
+        "a" : () => setIsAddUserModalOpen(true),
+        "r" : () => resetRowValue(entryIndex() || 0),
+        "d" : () => handleDelete(getRowValue(entryIndex())?.userId || "")
+    }
+
+    const handleKeyboardEvent = (event: KeyboardEvent) => {
+        const target = event.target as HTMLInputElement;
+        
+        // Ignore keyboard shortcuts for inputs and textareas
+        if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") { return; }
+
+        if (shortcuts[event.key]) {
+            event.preventDefault();
+            shortcuts[event.key]();
+        }
+    }
+
+    onMount(() =>   {document.addEventListener("keydown", handleKeyboardEvent);})
+    onCleanup(() => {document.removeEventListener("keydown", handleKeyboardEvent);})
+
+    const getRowValue = (index: number | undefined): User | null => {
         if (index === undefined || index === null) return null;
 
         const idInput = document.getElementById(`userId-${index}`) as HTMLInputElement | null;
         const nameInput = document.getElementById(`userName-${index}`) as HTMLInputElement | null;
-        const roleSelect = document.getElementById(`userRole-${index}`) as HTMLSelectElement | null;
 
-        if (!idInput || !nameInput || !roleSelect) return null;
+        if (!idInput || !nameInput) return null;
 
         return {
-            id: idInput.value,
+            userId: idInput.value,
             name: nameInput.value,
-            role: roleSelect.value
         };
     };
 
-    const handleAddUser = async (data: UserResponse) => {
+    const handleAddUser = async (data: User) => {
         setIsAddUserModalOpen(true);
         try {
-            if (!data.id || !data.name || !data.role) {return;}
+            if (!data.userId || !data.name) {return;}
             await createNewUser({ ...data}, navigate);
             refetch();
             setIsAddUserModalOpen(false);
@@ -40,8 +60,8 @@ const Users: Component = () => {
         }
     }
 
-    const handleChange = async (oldID: string) => {
-        if (!oldID) return;
+    const handleChange = async (targetId: string) => {
+        if (!targetId) return;
 
         const rowData = getRowValue(entryIndex());
 
@@ -51,7 +71,7 @@ const Users: Component = () => {
         }
         
         try {
-            await updateExistingUser(oldID, {name: rowData.name, role: rowData.role}, navigate);
+            await updateExistingUser({userId: targetId, name: rowData.name}, navigate);
             refetch();
         } catch (error) {
             console.error("Failed to update user", error);
@@ -68,14 +88,11 @@ const Users: Component = () => {
         }
     }
 
-    const resetRowValue = (index: number, data: UserResponse) => {
-        const idInput = document.getElementById(`userId-${index}`) as HTMLInputElement;
-        const nameInput = document.getElementById(`userName-${index}`) as HTMLInputElement;
-        const roleSelect = document.getElementById(`userRole-${index}`) as HTMLSelectElement;
+    const resetRowValue = (index: number) => {
+        if (!index) return;
 
-        idInput.value = data.id;
-        nameInput.value = data.name;
-        roleSelect.value = data.role;
+        const nameInput = document.getElementById(`userName-${index}`) as HTMLInputElement;
+        nameInput.value = users()?.find((user) => user.userId === getRowValue(entryIndex())?.userId)?.name || "";
     }
 
     return (
@@ -83,17 +100,23 @@ const Users: Component = () => {
         <NavBar />
         <h1 class="text-light font-code text-center">User admin</h1>
 
-        <div class='flex flex-col gap-4 max-w-70vw mx-auto mb-20'>
+        <div class='flex flex-col gap-3 max-w-70vw mx-auto mb-20'>
+            {/* Headers */}
+            <div class="flex gap-2 font-norm text-center">
+                <h1 class="flex-1 flex-shrink-50 mb-0">User ID</h1>
+                <h1 class="flex-1 flex-shrink flex-basis-[200px] mb-0">Name</h1>
+            </div>
             <For each={users()}>
                 {(user, index) => (
                     <div class="flex bg-offDark py-1 px-2 rounded-lg flex-nowrap"
-                        onMouseEnter={() => setEntryIndex(index())}>
+                        onMouseEnter={() => setEntryIndex(index())}
+                        onMouseLeave={() => setEntryIndex(undefined)}>
                         <input 
                             type="text" 
                             disabled={true}
                             id={`userId-${index()}`}
                             class="text-light font-code text-xl opacity-60 b-r-primary b-r-solid px-4 py-2 flex-1 flex-shrink-50 min-w-0 rd-tr-md rd-br-md" 
-                            value={user.id}
+                            value={user.userId}
                         />
                         <input 
                             type="text" 
@@ -101,23 +124,12 @@ const Users: Component = () => {
                             class="text-light font-code text-xl px-4 py-2 flex-1 flex-shrink flex-basis-[200px] min-w-0"
                             value={user.name} 
                         />
-                        <select 
-                            value={user.role} 
-                            id={`userRole-${index()}`}
-                            class="text-light font-code text-xl px-4 b-none py-2 min-w-0"
-                        >
-                            <For each={roles}>
-                                {(role) => (
-                                    <option value={role}>{role}</option>
-                                )}
-                            </For>
-                        </select>
                         <Show when={entryIndex() === index()}>
                             <div class="relative w-0 h-0 left-3">
                                 <div class="absolute flex w-69px h-43px items-center" >
-                                    <button class="i-mdi:trash-can-outline w-6 h-6 " onClick={[handleDelete, user.id]}></button>
-                                    <button class="i-mdi:refresh w-6 h-6" onClick={() => resetRowValue(index(), user)}></button>
-                                    <button class="i-mdi:content-save-outline w-6 h-6" onClick={[handleChange, user.id]}></button>
+                                    <button class="i-mdi:trash-can-outline w-6 h-6 " onClick={[handleDelete, user.userId]}></button>
+                                    <button class="i-mdi:refresh w-6 h-6" onClick={() => resetRowValue(index())}></button>
+                                    <button class="i-mdi:content-save-outline w-6 h-6" onClick={[handleChange, user.userId]}></button>
                                 </div>
                             </div>
                         </Show>
@@ -127,14 +139,14 @@ const Users: Component = () => {
         </div>
 
         <button 
-        class="nm fixed bottom-16 right-16 p-3 text-lg font-code text-primary rounded-full flex items-center justify-center 
+        class="nm fixed bottom-14 right-14 p-3 text-lg font-code text-primary rounded-full flex items-center justify-center 
                transition-transform transform hover:scale-105 hover:bg-slightDark hover:shadow-lg"
         onClick={() => setIsAddUserModalOpen(true)}
         >
             <i class="i-mdi:plus w-6 h-6 mr-2"></i>Add user
         </button>
 
-        <AddUserModal isModalOpen={isAddUserModalOpen} closeModal={() => setIsAddUserModalOpen(false)} roles={roles} handleAddFn={(data: UserResponse) => handleAddUser(data)}/>
+        <AddUserModal isModalOpen={isAddUserModalOpen} closeModal={() => setIsAddUserModalOpen(false)} handleAddFn={(data: User) => handleAddUser(data)}/>
     </div>
     );
 };

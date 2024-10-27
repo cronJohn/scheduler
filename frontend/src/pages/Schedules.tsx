@@ -3,7 +3,7 @@ import { Spinner, SpinnerType } from 'solid-spinner';
 import { itd, mtr, fmtDate } from '../utils/conv';
 import { fetchUserSchedules } from '../utils/api';
 import { NavBar } from '../components/NavBar';
-import { groupSchedulesByWeek } from '../utils/helper';
+import { displayCurrentOrPrevWeek, groupSchedulesByWeek } from '../utils/helper';
 
 const Schedules: Component = () => {
     const [id, setId] = createSignal<string>();
@@ -20,7 +20,8 @@ const Schedules: Component = () => {
     return (
         <div>
             <NavBar />
-            <div class='nm flex flex-col min-w-300px max-w-400px w-30vw mx-auto mt-20vh p-3rem flex-col items-center justify-center'>
+            <div class='nm flex flex-col min-w-300px max-w-400px w-30vw mx-auto mt-20vh p-8 flex-col items-center justify-center'>
+                <h1 class="font-norm m-0 mb-2 text-light text-2xl">Enter your ID</h1>
                 <input
                 type="text"
                 onChange={(e) => setId(e.currentTarget.value)}
@@ -36,26 +37,34 @@ const Schedules: Component = () => {
                     <Spinner type={SpinnerType.tailSpin} color="white" />
                 </div>
             </Show>
-            <div class="nm min-w-400px w-40vw mx-auto my-12 flex flex-col items-center font-code">
-                <Show when={id()}>
+            <div class="nm min-w-400px w-60vw max-w-700px mx-auto my-12 flex flex-col items-center font-code">
+                <Show when={id() && schedules()}>
                     <Show when={(schedules() || []).length > 0} fallback={<h1 class="text-3xl text-center">No schedules found</h1>}>
                         <h1 class="text-3xl mt-8 mb-1rem text-center">Schedules for {id()}</h1>
+                        {/* Schedules */ }
                         <For each={Object.entries(groupSchedulesByWeek(schedules() || []))}>
                             {([weekStartDate, schedules]) => (
-                                <div class='nm w-70% bg-slightDark px-5 py-2 mb-8 rounded-lg shadow-md'>
-                                    <h2 class='font-norm text-2xl text-center mb-2'>Week of {fmtDate(weekStartDate)}</h2>
-                                    <hr class='border-primary border-2 w-80% border-solid rd-lg mb-4' />
+                                <div class="nm w-70% px-8 py-3 mb-8 rounded-lg"> {/* Week schedules */}
+                                    <h2 class="font-norm font-light text-center">
+                                    <span class="font-bold ">{displayCurrentOrPrevWeek(weekStartDate)}</span>
+                                    {fmtDate(weekStartDate)}</h2>
                                     <For each={Object.entries(schedules)}>
-                                        {([dayOfWeek, timeEntries]) => (
-                                            <div class='mb-4 text-center font-norm'>
-                                                <h3 class='text-xl mb-1'>{itd(Number(dayOfWeek))}</h3>
+                                    {([dayOfWeek, timeEntries]) => (
+                                        <div> {/* Day of week */}
+                                            <h3 class='text-lg font-norm font-light mb-1' title={fmtDate(timeEntries[0].day)}>{itd(Number(dayOfWeek))}</h3>
+                                            <div class='mb-4 flex lt-maxSm:flex-col lt-maxSm:gap-0 gap-5 justify-center text-center font-norm b-solid b-light b-1px rd-lg'>
+                                                {/* Day entries */}
                                                 <For each={timeEntries}>
-                                                    {({ clockIn, clockOut }) => (
-                                                        <p class='mt-0 mb-1'>{`${mtr(clockIn)} - ${mtr(clockOut)}`}</p>
-                                                    )}
+                                                {({ role, clockIn, clockOut }) => ( 
+                                                    <div class='flex flex-col m-2'> {/* Time entry */}
+                                                        <p class='my-0 '>{`${mtr(clockIn)} - ${mtr(clockOut)}`}</p>
+                                                        <p class='my-0 '>{role}</p>
+                                                    </div>
+                                                )}
                                                 </For>
                                             </div>
-                                        )}
+                                        </div>
+                                    )}
                                     </For>
                                 </div>
                             )}
