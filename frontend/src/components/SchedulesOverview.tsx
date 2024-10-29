@@ -192,7 +192,7 @@ const ScheduleEntry: Component<{
     onMouseLeave: () => void;
 }> = (props) => {
     return (
-        <div class="p-2 flex ol w-full draggable outline-solid outline-white outline-print-outline-dark flex-justify-between"
+        <div class="p-2 flex ol w-full draggable outline-solid outline-white print-outline-dark flex-justify-between"
         onMouseEnter={() => props.onMouseEnter()}
         onMouseLeave={() => props.onMouseLeave()}
         data-scheduleid={props.schedule.scheduleId}
