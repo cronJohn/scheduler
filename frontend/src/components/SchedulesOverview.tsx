@@ -48,9 +48,11 @@ export const SchedulesOverview: Component<{
         });
     })
 
-    const uniqueRoles = createMemo(() => {
-        return Array.from(new Set(allSchedules.map(schedule => schedule.role)));
-    });
+    const roleOrder: { [key: string]: number } = {
+        'inshop': 1,
+        'driver': 2,
+        'manager': 3,
+    };
     
     return (
         <table class="w-full text-center text-light print-text-dark font-norm bg-white border-collapse">
@@ -66,56 +68,60 @@ export const SchedulesOverview: Component<{
                 </tr>
             </thead>
             <tbody>
-                {Array.from(new Set(allSchedules.map(schedule => schedule.role))).map((role) => ( // Get all unique roles
-                    <>
-                        <tr>
-                            <td colspan={7} class="ol outline-solid outline-white print-outline-dark bg-black print-bg-white p-2 font-bold text-xl text-primary">
-                                {role.charAt(0).toUpperCase() + role.slice(1)}
-                            </td>
-                        </tr>
-                        <tr>
-                            <For each={weekDates()}>
-                                {({ date }) => {
-                                    const schedulesForDay = allSchedules.filter(schedule => 
-                                        schedule.day === date && 
-                                        schedule.role.toLowerCase() === role
-                                    );
-                                    const amSchedules = schedulesForDay.filter(schedule => Number(schedule.clockIn.slice(0, 2)) < 12);
-                                    const pmSchedules = schedulesForDay.filter(schedule => Number(schedule.clockIn.slice(0, 2)) >= 12);
+                {Array.from(new Set(allSchedules.map(schedule => schedule.role.toLowerCase())))
+                .sort((a, b) => (roleOrder[a] || Infinity) - (roleOrder[b] || Infinity))
+                .map((role) => (
+                        <>
+                            <tr>
+                                <td colspan={7} class="ol outline-solid outline-white print-outline-dark bg-black print-bg-white p-2 font-bold text-xl text-primary">
+                                    {role.charAt(0).toUpperCase() + role.slice(1)}
+                                </td>
+                            </tr>
+                            <tr>
+                                <For each={weekDates()}>
+                                    {({ date }) => {
+                                        const schedulesForDay = allSchedules.filter(schedule => 
+                                            schedule.day === date && 
+                                            schedule.role.toLowerCase() === role
+                                        );
 
-                                    return (
-                                        <td class="ol p-0 outline-solid outline-white print-outline-dark bg-dark print-bg-white"
-                                        data-day={date} data-role={role}>
-                                            <ScheduleDroppable currentSelection={selectedSchedule}>
-                                                <Show when={amSchedules.length > 0}>
-                                                    <h3 class="font-bold text-lg">AM</h3>
+                                        const amSchedules = schedulesForDay.filter(schedule => Number(schedule.clockIn.slice(0, 2)) < 12);
+                                        const pmSchedules = schedulesForDay.filter(schedule => Number(schedule.clockIn.slice(0, 2)) >= 12);
+
+                                        return (
+                                            <td class="ol p-0 outline-solid outline-white print-outline-dark bg-dark print-bg-white"
+                                            data-day={date}
+                                            data-role={role}>
+                                                <ScheduleDroppable>
+                                                    <Show when={allSchedules && amSchedules.length > 0}>
+                                                        <h3 class="font-bold text-lg">AM</h3>
                                                         <For each={amSchedules}>
                                                             {(schedule) => (
                                                                 <ScheduleEntry schedule={schedule} 
-                                                                onMouseEnter={() => setSelectedSchedule(schedule)} 
-                                                                onMouseLeave={() => setSelectedSchedule({})}/>
+                                                                    onMouseEnter={() => setSelectedSchedule(schedule)} 
+                                                                    onMouseLeave={() => setSelectedSchedule({})} />
                                                             )}
                                                         </For>
-                                                </Show>
+                                                    </Show>
 
-                                                <Show when={pmSchedules.length > 0}>
-                                                    <h3 class="font-bold text-lg">PM</h3>
+                                                    <Show when={allSchedules && pmSchedules.length > 0}>
+                                                        <h3 class="font-bold text-lg">PM</h3>
                                                         <For each={pmSchedules}>
                                                             {(schedule) => (
                                                                 <ScheduleEntry schedule={schedule} 
-                                                                onMouseEnter={() => setSelectedSchedule(schedule)} 
-                                                                onMouseLeave={() => setSelectedSchedule({})}/>
+                                                                    onMouseEnter={() => setSelectedSchedule(schedule)} 
+                                                                    onMouseLeave={() => setSelectedSchedule({})} />
                                                             )}
                                                         </For>
-                                                </Show>
-                                            </ScheduleDroppable>
-                                        </td>
-                                    );
-                                }}
-                            </For>
-                        </tr>
-                    </>
-                ))}
+                                                    </Show>
+                                                </ScheduleDroppable>
+                                            </td>
+                                        );
+                                    }}
+                                </For>
+                            </tr>
+                        </>
+                    ))}
             </tbody>
         </table>
     );
@@ -123,7 +129,6 @@ export const SchedulesOverview: Component<{
 
 type ScheduleDroppableProps = {
   children: JSXElement | JSXElement[];
-  currentSelection: Schedule;
 };
 
 const ScheduleDroppable: Component<ScheduleDroppableProps> = (props) => {
@@ -135,36 +140,50 @@ const ScheduleDroppable: Component<ScheduleDroppableProps> = (props) => {
     };
 
     onMount(() => {
-        Sortable.create(myRef, {
-            group: "shared",
-            animation: 150,
-            draggable: ".draggable",
-            onEnd: (e) => {
-                const scheduleId = Number(e.item.dataset.scheduleid);
-                const targetCell = e.to.closest("td");
-                const newDay = targetCell?.dataset.day || "";
-                const newRole = targetCell?.dataset.role || ""; // Use the role of the target cell
-                const clockIn = e.item.dataset.clockin || "";
-                const clockOut = e.item.dataset.clockout || "";
+    Sortable.create(myRef, {
+        group: "shared",
+        animation: 150,
+        draggable: ".draggable",
+        onEnd: (e) => {
+            const scheduleId = Number(e.item.dataset.scheduleid);
+            const clockIn = e.item.dataset.clockin || "";
+            const clockOut = e.item.dataset.clockout || "";
+
+            // Currently dragged schedule
+            const previousCell = e.from.closest("td");
+            const prevDay = previousCell?.dataset.day || "";
+            const prevRole = previousCell?.dataset.role || "";
+
+            // New cell
+            const targetCell = e.to.closest("td");
+            const newDay = targetCell?.dataset.day || "";
+            const newRole = targetCell?.dataset.role || "";
+
+            // Only proceed if the day or role has changed
+            if (prevDay !== newDay || prevRole !== newRole) {
+                console.log("updating schedule");
                 
                 updateExistingSchedule({ scheduleId, day: newDay, role: newRole, clockIn, clockOut }, navigate);
 
-                setAllSchedules(schedules => 
-                    schedules.map(schedule =>
-                        schedule.scheduleId === scheduleId
-                            ? { ...schedule, day: newDay, role: newRole } // Update both day and role
-                            : schedule
-                    )
+                const newSchedules = allSchedules.map(schedule => 
+                schedule.scheduleId === scheduleId 
+                    ? { ...schedule, day: newDay, role: newRole, clockIn, clockOut }
+                    : schedule
                 );
-            },
 
+                setAllSchedules(newSchedules);
+
+            }
+            },
         });
-    })
-  return (
+    });
+
+
+    return (
       <div ref={setRef} class="flex flex-col w-full ol droppable items-center flex-justify-between">
           {props.children}
       </div>
-  );
+    );
 };
 
 const ScheduleEntry: Component<{
@@ -177,6 +196,8 @@ const ScheduleEntry: Component<{
         onMouseEnter={() => props.onMouseEnter()}
         onMouseLeave={() => props.onMouseLeave()}
         data-scheduleid={props.schedule.scheduleId}
+        data-role={props.schedule.role}
+        data-day={props.schedule.day}
         data-clockin={props.schedule.clockIn}
         data-clockout={props.schedule.clockOut}
         >
