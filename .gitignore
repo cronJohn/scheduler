@@ -5,3 +5,4 @@ internal/database/sqlc/
 .env
 .DS_Store
 tmp
+node_modules
