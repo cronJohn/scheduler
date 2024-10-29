@@ -8,23 +8,22 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog/log"
 
 	"github.com/cronJohn/scheduler/api/httpserv"
+	"github.com/cronJohn/scheduler/pkg/config"
 	_ "github.com/cronJohn/scheduler/pkg/logger"
 )
 
 var server *httpserv.Server
 
 func init() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal().Msgf("Unable to load .env file: %v", err)
+	if err := config.LoadConfig("config.json"); err != nil {
+		log.Fatal().Msgf("Unable to load config: %v", err)
 	}
 
-	dbHandle, err := sql.Open("sqlite3", os.Getenv("SS_DB"))
+	dbHandle, err := sql.Open("sqlite3", config.ConfigData.Backend.SSDB)
 	if err != nil {
 		log.Fatal().Msgf("Unable to open database: %v", err)
 	}

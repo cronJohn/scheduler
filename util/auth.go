@@ -1,7 +1,9 @@
 package util
 
-import "os"
+import (
+	"github.com/cronJohn/scheduler/pkg/config"
+)
 
 func IsValidCredentials(username, password string) bool {
-	return username == os.Getenv("SS_USERNAME") && password == os.Getenv("SS_PASSWORD")
+	return username == config.ConfigData.Backend.SSUsername && password == config.ConfigData.Backend.SSPassword
 }

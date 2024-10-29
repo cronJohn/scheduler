@@ -1,4 +1,5 @@
 import { Schedule, WeekSchedule } from "./types";
+import config from "../../../config.json";
 
 export const getDateISO = (): string => {
     const isoString = new Date().toISOString();
@@ -32,7 +33,7 @@ export const groupSchedulesByWeek = (schedules: Schedule[]): WeekSchedule => {
     const weekMap: WeekSchedule = {};
 
     schedules.forEach(schedule => {
-        const weekStartDate = nearestStartOfWeek(schedule.day, Number(import.meta.env.VITE_WEEK_START) || 3);
+        const weekStartDate = nearestStartOfWeek(schedule.day, Number(config.frontend.WEEK_START) || 3);
         const dayOfWeek = new Date(schedule.day).getUTCDay();
 
         if (!weekMap[weekStartDate]) {
@@ -57,7 +58,7 @@ export const groupSchedulesByWeek = (schedules: Schedule[]): WeekSchedule => {
 };
 
 export function displayCurrentOrPrevWeek(weekStartDate: string): string {
-    return nearestStartOfWeek(getDateISO(), Number(import.meta.env.VITE_WEEK_START) || 3) == weekStartDate ? 'This week' : 'Week of';
+    return nearestStartOfWeek(getDateISO(), Number(config.frontend.WEEK_START) || 3) == weekStartDate ? 'This week' : 'Week of';
 }
 
 export function isUserAuthenticated(): boolean {

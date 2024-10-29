@@ -5,12 +5,12 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/rs/zerolog/log"
 
 	"github.com/cronJohn/scheduler/api/httpserv/handlers"
 	"github.com/cronJohn/scheduler/api/httpserv/middleware"
+	"github.com/cronJohn/scheduler/pkg/config"
 )
 
 var (
@@ -30,7 +30,7 @@ func NewServer(db *sql.DB) *Server {
 
 	return &Server{
 		server: &http.Server{
-			Addr:    fmt.Sprintf("%s%s", SERVER_HOST, os.Getenv("SS_PORT")),
+			Addr:    fmt.Sprintf("%s%s", SERVER_HOST, config.ConfigData.Backend.SSPort),
 			Handler: mux,
 		},
 		mux: mux,
@@ -78,10 +78,10 @@ func (s *Server) Start() error {
 		http.StripPrefix("/assets/", http.FileServer(http.Dir("frontend/dist/assets/"))),
 	)
 
-	tlsCert := os.Getenv("TLS_CERT")
-	tlsKey := os.Getenv("TLS_KEY")
+	tlsCert := config.ConfigData.Backend.TLSCert
+	tlsKey := config.ConfigData.Backend.TLSKey
 
-	log.Info().Msgf("Starting server on %s%s...", SERVER_HOST, os.Getenv("SS_PORT"))
+	log.Info().Msgf("Starting server on %s%s...", SERVER_HOST, config.ConfigData.Backend.SSPort)
 	if tlsCert != "" && tlsKey != "" {
 		log.Info().Msg("Starting server with TLS...")
 		return s.server.ListenAndServeTLS(tlsCert, tlsKey)

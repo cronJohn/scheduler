@@ -2,12 +2,13 @@ import { Component, createEffect, createSignal, onMount } from "solid-js";
 import { SchedulesOverview } from "../components/SchedulesOverview";
 import { getDateISO, nearestStartOfWeek } from "../utils/helper";
 import { NavBar } from "../components/NavBar";
+import config from "../../../config.json";
 
 const Overview: Component = () => {
     const [weekSelection, setWeekSelection] = createSignal<string>();
 
     onMount(() => {
-        setWeekSelection(nearestStartOfWeek(getDateISO(), Number(import.meta.env.VITE_WEEK_START) || 3) || getDateISO());
+        setWeekSelection(nearestStartOfWeek(getDateISO(), Number(config.frontend.WEEK_START) || 3) || getDateISO());
     });
 
     const addWeek = () => {

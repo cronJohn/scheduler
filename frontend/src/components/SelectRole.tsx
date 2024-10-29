@@ -1,4 +1,5 @@
 import { Component, For, onMount } from "solid-js";
+import config from "../../../config.json";
 
 export const SelectRole: Component<{
     setFn: (input: string) => void;
@@ -7,7 +8,7 @@ export const SelectRole: Component<{
     width?: string
     placeholder?: string
 }> = (props) => {
-    const roles: string[] = import.meta.env.VITE_ROLES.split(",");
+    const roles: string[] = config.frontend.ROLES;
 
     onMount(() => {
         if (!props.defaultVal) {

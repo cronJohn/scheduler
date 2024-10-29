@@ -1,4 +1,5 @@
 import { NavigateFunction, Schedule, User } from "./types";
+import config from "../../../config.json";
 
 const handleResponse = (response: Response, nav: NavigateFunction) => {
     if (response.status === 401) {
@@ -8,7 +9,7 @@ const handleResponse = (response: Response, nav: NavigateFunction) => {
 }
 
 export const handleLogin = async (data: FormData): Promise<void | Error> => {
-    const response = await fetch(`${import.meta.env.VITE_SERV}/api/v1/auth/login`, {
+    const response = await fetch(`${config.frontend.URI}/api/v1/auth/login`, {
         method: 'POST',
         body: data,
         credentials: 'include', // need this for cookies to be set
@@ -26,7 +27,7 @@ export type CreateNewUserRequestData = {
     name: string;
 }
 export const createNewUser = async (data: CreateNewUserRequestData, nav: NavigateFunction) => {
-    const response = await fetch(`${import.meta.env.VITE_SERV}/api/v1/users`, {
+    const response = await fetch(`${config.frontend.URI}/api/v1/users`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -39,7 +40,7 @@ export const createNewUser = async (data: CreateNewUserRequestData, nav: Navigat
 
 export const fetchUsers = async (nav: NavigateFunction): Promise<User[]> => {
     try {
-        const response = await fetch(`${import.meta.env.VITE_SERV}/api/v1/users`);
+        const response = await fetch(`${config.frontend.URI}/api/v1/users`);
         if (response.ok) {
             return response.json();
         }
@@ -60,7 +61,7 @@ export const updateExistingUser = async (data: UpdateUserRequestData, nav: Navig
 
     const { userId, ...requestBodyData } = data;
 
-    const response = await fetch(`${import.meta.env.VITE_SERV}/api/v1/users/${userId}`, {
+    const response = await fetch(`${config.frontend.URI}/api/v1/users/${userId}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -74,7 +75,7 @@ export const updateExistingUser = async (data: UpdateUserRequestData, nav: Navig
 export const deleteExistingUser = async (userId: string, nav: NavigateFunction) => {
     if (!userId) return;
 
-    const response = await fetch(`${import.meta.env.VITE_SERV}/api/v1/users/${userId}`, {
+    const response = await fetch(`${config.frontend.URI}/api/v1/users/${userId}`, {
         method: 'DELETE',
     });
 
@@ -84,7 +85,7 @@ export const deleteExistingUser = async (userId: string, nav: NavigateFunction) 
 export const fetchUserSchedules = async (userId: string): Promise<Schedule[]> => {
     if (!userId) return [];
     try {
-        const response = await fetch(`${import.meta.env.VITE_SERV}/api/v1/users/${userId}/schedules`);
+        const response = await fetch(`${config.frontend.URI}/api/v1/users/${userId}/schedules`);
         
         if (!response.ok) { return []; }
 
@@ -111,7 +112,7 @@ export const fetchUserSchedules = async (userId: string): Promise<Schedule[]> =>
 
 export const fetchAllSchedules = async (nav: NavigateFunction): Promise<Schedule[]> => {
     try {
-        const response = await fetch(`${import.meta.env.VITE_SERV}/api/v1/schedules`);
+        const response = await fetch(`${config.frontend.URI}/api/v1/schedules`);
         if (response.ok) {
             return response.json();
         }
@@ -133,7 +134,7 @@ export type CreateNewScheduleRequestData = {
 export const createNewSchedule = async (data: CreateNewScheduleRequestData, nav: NavigateFunction) => {
     const { userId, ...requestBodyData } = data;
 
-    const response = await fetch(`${import.meta.env.VITE_SERV}/api/v1/users/${userId}/schedules`, {
+    const response = await fetch(`${config.frontend.URI}/api/v1/users/${userId}/schedules`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -154,7 +155,7 @@ export type UpdateScheduleRequestData = {
 export const updateExistingSchedule = async (data: UpdateScheduleRequestData, nav: NavigateFunction) => {
     const { scheduleId, ...requestBodyData } = data;
 
-    const response = await fetch(`${import.meta.env.VITE_SERV}/api/v1/users/schedules/${scheduleId}`, {
+    const response = await fetch(`${config.frontend.URI}/api/v1/users/schedules/${scheduleId}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -166,7 +167,7 @@ export const updateExistingSchedule = async (data: UpdateScheduleRequestData, na
 }
 
 export const deleteExistingSchedule = async (scheduleId: number, nav: NavigateFunction) => {
-    const response = await fetch(`${import.meta.env.VITE_SERV}/api/v1/users/schedules/${scheduleId}`, {
+    const response = await fetch(`${config.frontend.URI}/api/v1/users/schedules/${scheduleId}`, {
         method: 'DELETE',
     });
 

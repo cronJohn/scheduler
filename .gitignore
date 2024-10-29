@@ -2,7 +2,6 @@ TODO.md
 internal/database/setup.sql
 internal/database/db.db
 internal/database/sqlc/
-.env
 .DS_Store
 tmp
 node_modules
