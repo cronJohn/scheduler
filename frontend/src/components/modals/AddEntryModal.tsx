@@ -23,8 +23,6 @@ export const AddEntryModal: Component<{
     const [isSelectDisabled, setIsSelectDisabled] = createSignal(false);
 
     createEffect(() => {
-        setState("role", props.getStateFn().role);
-        
         if (isSelectDisabled()) {
             setState("userId", props.targetUser);
         }
