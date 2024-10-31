@@ -1,4 +1,4 @@
-import { Component, createEffect, createSignal, onMount } from "solid-js";
+import { Component, createSignal, onMount } from "solid-js";
 import { SchedulesOverview } from "../components/SchedulesOverview";
 import { getDateISO, nearestStartOfWeek } from "../utils/helper";
 import { NavBar } from "../components/NavBar";

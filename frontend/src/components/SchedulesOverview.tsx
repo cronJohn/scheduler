@@ -6,6 +6,7 @@ import { useNavigate } from "@solidjs/router";
 import { createStore } from "solid-js/store";
 import { Schedule } from "../utils/types";
 import Sortable from 'sortablejs';
+import config from "../../../config.json";
 
 const [allSchedules, setAllSchedules] = createStore<Schedule[]>([]);
 
@@ -48,11 +49,13 @@ export const SchedulesOverview: Component<{
         });
     })
 
-    const roleOrder: { [key: string]: number } = {
-        'inshop': 1,
-        'driver': 2,
-        'manager': 3,
-    };
+    const roleOrder: { [key: string]: number } = config.frontend.ROLES.reduce<{ [key: string]: number }>(
+        (acc, role: string, index: number) => {
+            acc[role] = index + 1;
+            return acc;
+        },
+        {}
+    );
     
     return (
         <table class="w-full text-center text-light print-text-dark font-norm bg-white border-collapse">
