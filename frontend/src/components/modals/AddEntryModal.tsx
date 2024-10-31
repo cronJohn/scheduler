@@ -28,6 +28,10 @@ export const AddEntryModal: Component<{
         if (isSelectDisabled()) {
             setState("userId", props.targetUser);
         }
+
+        if (props.getStateFn().userId === "") {
+            setIsSelectDisabled(false);
+        }
     });
 
     return (

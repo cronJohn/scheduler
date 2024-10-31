@@ -5,3 +5,4 @@ internal/database/sqlc/
 .DS_Store
 tmp
 node_modules
+config.json
