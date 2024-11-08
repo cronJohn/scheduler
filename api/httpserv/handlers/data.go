@@ -261,6 +261,33 @@ func (h *Handler) DeleteUserSchedule(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+type DeleteScheduleRequest struct {
+	ScheduleIdList []int `json:"scheduleIdList"`
+}
+
+func (h *Handler) DeleteUserSchedules(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var requestBody DeleteScheduleRequest
+
+	err := json.NewDecoder(r.Body).Decode(&requestBody)
+	if err != nil {
+		http.Error(w, "Bad delete request", http.StatusBadRequest)
+		return
+	}
+
+	for _, id := range requestBody.ScheduleIdList {
+		err = h.db.DeleteSchedule(ctx, int64(id))
+		if err != nil {
+			http.Error(w, "Failed to delete schedules", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
 type ShiftScheduleRequest struct {
 	ScheduleIdList []int  `json:"scheduleIdList"`
 	ShiftAmount    string `json:"shiftAmount"`
