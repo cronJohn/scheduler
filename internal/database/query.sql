@@ -38,3 +38,11 @@ WHERE schedule_id = ?;
 -- name: DeleteSchedule :exec
 DELETE FROM schedules
 WHERE schedule_id = ?;
+
+-- name: ShiftSchedules :exec
+UPDATE schedules
+SET 
+    day = DATE(day, ?)
+WHERE 
+    schedule_id IN (?);
+
