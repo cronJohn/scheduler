@@ -3,7 +3,7 @@ import { Spinner, SpinnerType } from 'solid-spinner';
 import { itd, mtr, fmtDate } from '../utils/conv';
 import { fetchUserSchedules } from '../utils/api';
 import { NavBar } from '../components/NavBar';
-import { displayCurrentOrPrevWeek, groupSchedulesByWeek } from '../utils/helper';
+import { displayCurrentOrPrevWeek, getColorFromString, groupSchedulesByWeek } from '../utils/helper';
 
 const Schedules: Component = () => {
     const [id, setId] = createSignal<string>();
@@ -46,7 +46,7 @@ const Schedules: Component = () => {
                             {([weekStartDate, schedules]) => (
                                 <div class="nm w-70% px-8 py-3 mb-8 rounded-lg"> {/* Week schedules */}
                                     <h2 class="font-norm font-light text-center">
-                                    <span class="font-bold ">{displayCurrentOrPrevWeek(weekStartDate)}</span>
+                                    <span class="font-bold ">{displayCurrentOrPrevWeek(weekStartDate)}: </span>
                                     {fmtDate(weekStartDate)}</h2>
                                     <For each={Object.entries(schedules)}>
                                     {([dayOfWeek, timeEntries]) => (
@@ -58,7 +58,8 @@ const Schedules: Component = () => {
                                                 {({ role, clockIn, clockOut }) => ( 
                                                     <div class='flex flex-col m-2'> {/* Time entry */}
                                                         <p class='my-0 '>{`${mtr(clockIn)} - ${mtr(clockOut)}`}</p>
-                                                        <p class='my-0 '>{role}</p>
+                                                        <p class='my-0 text-dark rounded font-500' style={{'background-color': getColorFromString(role),
+                                                        'text-transform': "uppercase"}}>{role}</p>
                                                     </div>
                                                 )}
                                                 </For>
