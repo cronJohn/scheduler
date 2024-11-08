@@ -1,5 +1,5 @@
 import { For, Show, createResource, createSignal, type Component } from 'solid-js';
-import { fetchUserSchedules, updateExistingSchedule, deleteExistingSchedule, createNewSchedule, CreateNewScheduleRequestData, UpdateScheduleRequestData } from '../utils/api';
+import { fetchUserSchedules, updateExistingSchedule, deleteExistingSchedule, createNewSchedule, CreateNewScheduleRequestData, UpdateScheduleRequestData, shiftSchedules, deleteExistingSchedules } from '../utils/api';
 import { fmtDate, itd } from '../utils/conv';
 import { TimeSlot } from '../components/TimeSlot';
 import { createStore, produce } from 'solid-js/store';
@@ -16,6 +16,8 @@ const Admin: Component = () => {
 
     const [isTimeSlotModalOpen, setIsTimeSlotModalOpen] = createSignal<boolean>(false);
     const [isAddEntryModalOpen, setIsAddEntryModalOpen] = createSignal<boolean>(false);
+
+    const [weekSelectionId, setWeekSelectionId] = createSignal<string>("");
 
     const [currentSchedule, setCurrentSchedule] = createStore<Schedule>({
         userId: "",
@@ -100,6 +102,59 @@ const Admin: Component = () => {
         }
     };
 
+    const getScheduleIds = (weeks: DaySchedule): number[] => {
+        return Object.values(weeks)
+            .map(schedules => schedules.map(schedule => schedule.scheduleId))
+            .flat();
+    }
+
+    const handlePreviousWeekShift = async (weeks: DaySchedule) => {
+        try {
+            // Use to set selection week to previous week
+            // to preserve the <Snow> component
+            const weekBuf = new Date(weekSelectionId());
+            weekBuf.setDate(weekBuf.getDate() - 7);
+
+            await shiftSchedules({
+                scheduleIdList: getScheduleIds(weeks),
+                shiftAmount: "-7 days"
+            }, navigate)
+
+            refetch();
+            setWeekSelectionId(weekBuf.toISOString().split('T')[0]);
+        } catch (error) {
+            console.error("Failed to shift schedules to previous week", error);
+        }
+    }
+
+    const handleNextWeekShift = async (weeks: DaySchedule) => {
+        try {
+            // Use to set selection week to next week
+            // to preserve the <Snow> component
+            const weekBuf = new Date(weekSelectionId());
+            weekBuf.setDate(weekBuf.getDate() + 7);
+
+            await shiftSchedules({
+                scheduleIdList: getScheduleIds(weeks),
+                shiftAmount: "+7 days"
+            }, navigate)
+
+            refetch();
+            setWeekSelectionId(weekBuf.toISOString().split('T')[0]);
+        } catch (error) {
+            console.error("Failed to shift schedules to next week", error);
+        }
+    }
+
+    const handleWeekDeletion = async (weeks: DaySchedule) => {
+        try {
+            await deleteExistingSchedules(getScheduleIds(weeks), navigate);
+            refetch();
+        } catch (error) {
+            console.error("Failed to delete schedules", error);
+        }
+    }
+
     return (
         <>
             <NavBar />
@@ -113,9 +168,19 @@ const Admin: Component = () => {
             <Show when={currentSchedule.userId && schedules()}>
                 <For each={Object.entries(groupSchedulesByWeek(schedules() || []))}>
                 {([weekStartDate, weekEntries]) => (
-                    <div class='mx-auto mb-30px min-w-650px w-50vw bg-offDark px-5 py-4 rounded font-norm'>
+                    <div class='mx-auto mb-30px min-w-650px w-50vw bg-offDark px-5 py-4 rounded font-norm'
+                    onMouseEnter={() => {setWeekSelectionId(weekStartDate)}}
+                    >
                         <h1 class='mb-2 mt-0'><span class='underline underline-offset-5'>{displayCurrentOrPrevWeek(weekStartDate)}: {fmtDate(weekStartDate)}</span>
-                            <span class='text-lg font-light ml-10px'>(Total Hours: {calculateTotalWeekHours(weekEntries)})</span>
+                            <span class='text-lg font-light ml-10px mr-2'>(Total Hours: {calculateTotalWeekHours(weekEntries)})</span>
+                            <Show when={weekSelectionId() === weekStartDate}>
+                                <button title="Move schedules to previous week" class="bg-light i-mdi:calendar-arrow-left w-6 h-6"
+                                onClick={() => handlePreviousWeekShift(weekEntries)}></button>
+                                <button title="Move schedules to next week" class="bg-light i-mdi:calendar-arrow-right w-6 h-6"
+                                onClick={() => handleNextWeekShift(weekEntries)}></button>
+                                <button title="Delete schedules for week" class="bg-light i-mdi:delete-outline w-6 h-6"
+                                onClick={() => handleWeekDeletion(weekEntries)}></button>
+                            </Show>
                         </h1>
                         <div>
                             <For each={Object.entries(weekEntries)}>

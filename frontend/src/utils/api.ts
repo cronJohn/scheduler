@@ -174,3 +174,32 @@ export const deleteExistingSchedule = async (scheduleId: number, nav: NavigateFu
     handleResponse(response, nav);
 }
 
+export const deleteExistingSchedules = async (scheduleId: number[], nav: NavigateFunction) => {
+    const response = await fetch(`${config.frontend.URI}/api/v1/users/schedules/list`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ scheduleIdList: scheduleId })
+    });
+
+    handleResponse(response, nav);
+}
+
+
+export type ScheduleShiftData = {
+    scheduleIdList: number[];
+    shiftAmount: string;
+}
+
+export const shiftSchedules = async (data: ScheduleShiftData, nav: NavigateFunction) => {
+    const response = await fetch(`${config.frontend.URI}/api/v1/schedules/shift`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json' // Set the Content-Type header
+        },
+        body: JSON.stringify(data)
+    })
+
+    handleResponse(response, nav)
+}
