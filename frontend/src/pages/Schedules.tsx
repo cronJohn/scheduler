@@ -1,20 +1,33 @@
-import { For, Show, createResource, createSignal, onMount, type Component } from 'solid-js';
+import { For, Show, createEffect, createResource, createSignal, onMount, type Component } from 'solid-js';
 import { Spinner, SpinnerType } from 'solid-spinner';
 import { itd, mtr, fmtDate } from '../utils/conv';
 import { fetchUserSchedules } from '../utils/api';
 import { NavBar } from '../components/NavBar';
 import { displayCurrentOrPrevWeek, getColorFromString, groupSchedulesByWeek } from '../utils/helper';
 
+var inputRef: HTMLInputElement;
+
 const Schedules: Component = () => {
     const [id, setId] = createSignal<string>();
     const [schedules] = createResource(id, fetchUserSchedules);
 
+    // order/priority
+    // query string -> local storage -> default
     onMount(() => {
         const params = new URLSearchParams(location.search);
         const idParam = params.get('id');
         if (idParam) {
             setId(idParam);
+            return;
         }
+        const storedId = localStorage.getItem('id');
+        if (storedId) {
+            setId(storedId);
+        }
+    });
+
+    createEffect(() => {
+        localStorage.setItem('id', id() || '');
     });
 
     return (
@@ -28,8 +41,15 @@ const Schedules: Component = () => {
                 onKeyPress={(e) => e.key === 'Enter' && setId(e.currentTarget.value)}
                 class="py-2 px-4 border-2 border-solid border-primary text-2xl rounded bg-offDark text-light disabled-text-gray-500"
                 placeholder={"Enter ID"}
+                ref={inputRef}
                 autofocus
                 />
+                <Show when={id() && id() !== ''}>
+                    <div class="flex items-center gap-3 h-50px mt-2">
+                        <h2 class="font-norm text-sm m-0">Selected user: {id()}</h2>
+                        <button class="text-sm h-70% bt px-1 m-0 rounded bg-dark bb-primary" onClick={() => {localStorage.removeItem('id'); setId(''); inputRef.value = ""}}>Clear</button>
+                    </div>
+                </Show>
             </div>
 
             <Show when={schedules.loading}>
