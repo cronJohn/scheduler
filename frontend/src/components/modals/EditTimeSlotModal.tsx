@@ -1,6 +1,5 @@
 import Modal from "@lutaok/solid-modal";
 import { Component, createEffect, onMount } from "solid-js";
-import { fmtMT } from '../../utils/conv';
 import { createStore } from "solid-js/store";
 import { UpdateScheduleRequestData } from "../../utils/api";
 import { Schedule } from "../../utils/types";
@@ -71,7 +70,7 @@ export const EditTimeSlotModal: Component<{
                     <input
                         id='start'
                         type="time"
-                        value={fmtMT(parseInt(state.clockIn))}
+                        value={state.clockIn}
                         onChange={(e) => setState("clockIn", e.currentTarget.value)}
                         class='bg-gray-500/20 ml-2 h-56px py-1.5 px-1 b-2 b-solid b-primary rounded text-white text-2xl iw'
                     />
@@ -82,7 +81,7 @@ export const EditTimeSlotModal: Component<{
                     <input
                         id='end'
                         type="time"
-                        value={fmtMT(parseInt(state.clockOut))}
+                        value={state.clockOut}
                         onChange={(e) => setState("clockOut", e.currentTarget.value)}
                         class='bg-gray-500/20 ml-2 py-1.5 h-56px px-1 b-2 b-solid b-primary rounded text-white text-2xl iw'
                     />
