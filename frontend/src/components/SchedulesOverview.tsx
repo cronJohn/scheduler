@@ -1,33 +1,123 @@
-import { Component, For, JSXElement, Show, createEffect, createMemo, onMount } from "solid-js";
+import { Component, For, JSXElement, Show, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import { itd, mtr } from "../utils/conv";
-import { fetchAllSchedules, updateExistingSchedule } from "../utils/api";
+import { UpdateScheduleRequestData, deleteExistingSchedule, fetchAllSchedules, updateExistingSchedule } from "../utils/api";
 import { getDateISO, getDateWithOffset } from "../utils/helper";
 import { useNavigate } from "@solidjs/router";
-import { createStore } from "solid-js/store";
+import { createStore, produce } from "solid-js/store";
 import { Schedule } from "../utils/types";
 import Sortable from 'sortablejs';
 import config from "../../../config.json";
+import { EditTimeSlotModal } from "./modals/EditTimeSlotModal";
 
 const [allSchedules, setAllSchedules] = createStore<Schedule[]>([]);
+
+const [selectedSchedule, setSelectedSchedule] = createStore<Schedule>({
+    userId: "",
+    scheduleId: 0,
+    day: "",
+    role: "",
+    clockIn: "",
+    clockOut: "",
+});
+
+const ContextMenu: Component<{
+    handleDelete: () => void;
+    handleEdit: () => void;
+}> = (props) => {
+    const [show, setShow] = createSignal(false);
+    const [position, setPosition] = createSignal({ x: 0, y: 0 });
+
+    const handleContextMenu = (event: MouseEvent) => {
+        const target = event.target as HTMLElement;
+
+        //                                    Can really be any data attribute specific to the Schedule type
+        const nearestElement = target.closest('[data-userid]') as HTMLElement;
+
+        setSelectedSchedule(produce((state) => {
+            state.userId = nearestElement?.dataset.userid || "";
+            state.scheduleId = Number(nearestElement?.dataset.scheduleid) || 0;
+            state.day = nearestElement?.dataset.day || "";
+            state.role = nearestElement?.dataset.role || "";
+            state.clockIn = nearestElement?.dataset.clockin || "";
+            state.clockOut = nearestElement?.dataset.clockout || "";
+        }));
+
+        // Check if the target or any of its ancestors has the class 'open-context-menu'
+        if (target.closest('.open-context-menu')) {
+            event.preventDefault(); // Prevent the default context menu from appearing
+            setPosition({ x: event.pageX, y: event.pageY });
+            setShow(true);
+        }
+    };
+
+    const handleClickOutside = (event: MouseEvent) => {
+        if (show() && !(event.target as HTMLElement).closest(".context-menu")) {
+            setShow(false);
+        }
+    };
+
+    // Add event listeners for context menu and click outside
+    document.addEventListener("contextmenu", handleContextMenu);
+    document.addEventListener("click", handleClickOutside);
+
+    // Cleanup event listeners on component unmount
+    onCleanup(() => {
+        document.removeEventListener("contextmenu", handleContextMenu);
+        document.removeEventListener("click", handleClickOutside);
+    });
+
+    const handleDelete = () => {
+        props.handleDelete();
+        setShow(false);
+    };
+
+    const handleEdit = () => {
+        props.handleEdit();
+        setShow(false);
+    };
+    
+    return (
+        <>
+            <Show when={show()}>
+                <div
+                    class="context-menu absolute bg-dark text-white b-primary b-solid rounded z-1000 px-2 text-sm"
+                    style={{
+                        top: `${position().y}px`,
+                        left: `${position().x}px`,
+                    }}
+                >
+                    <h1 class="bg-dark text-light font-code mb-2">Edit Schedule</h1>
+                    <div class="flex flex-col items-center mb-2">
+                        <div class="flex space-between items-center w-full px-1 py-2 hover:bg-slightDark transition-colors duration-100 rounded"
+                        onClick={handleDelete}
+                        >
+                            <div class="i-mdi:trash-outline bg-white w-6 h-6 cursor-pointer"></div>
+                            <button class="bg-transparent font-code text-light text-lg">Delete</button>
+                        </div>
+                        <div class="flex space-between items-center w-full px-1 py-2 hover:bg-slightDark transition-colors duration-100 rounded"
+                        onClick={handleEdit}
+                        >
+                            <div class="i-mdi:square-edit-outline bg-white w-6 h-6 cursor-pointer"></div>
+                            <button class="bg-transparent font-code text-light text-lg">Edit</button>
+                        </div>
+                    </div>
+                </div>
+            </Show>
+        </>
+    );
+};
 
 export const SchedulesOverview: Component<{
     week: () => string | undefined;
 }> = (props) => {
     const navigate = useNavigate();
-    const [selectedSchedule, setSelectedSchedule] = createStore<Schedule>({
-        userId: "",
-        scheduleId: 0,
-        day: "",
-        role: "",
-        clockIn: "",
-        clockOut: "",
-    });
 
     const fetchNewSchedules = async () => {
         const schedules = await fetchAllSchedules(navigate);
         setAllSchedules(schedules);
     }
 
+    const [isTimeSlotModalOpen, setIsTimeSlotModalOpen] = createSignal<boolean>(false);
 
     onMount(() => {
         fetchNewSchedules();
@@ -56,7 +146,22 @@ export const SchedulesOverview: Component<{
         },
         {}
     );
-    
+
+    const handleScheduleDelete = async () => {
+        await deleteExistingSchedule(selectedSchedule.scheduleId, navigate);
+        setAllSchedules(allSchedules.filter(schedule => schedule.scheduleId !== selectedSchedule.scheduleId));
+    }
+
+    const handleScheduleEdit = async (data: UpdateScheduleRequestData) => {
+        await updateExistingSchedule(data, navigate);
+
+        setAllSchedules(allSchedules.map(schedule => 
+            schedule.scheduleId === data.scheduleId 
+                ? { ...schedule, day: data.day, role: data.role, clockIn: data.clockIn, clockOut: data.clockOut }
+                : schedule
+        ));
+    }
+
     return (
         <table class="w-full text-center text-light print-text-dark font-norm bg-white border-collapse">
             <thead>
@@ -100,9 +205,7 @@ export const SchedulesOverview: Component<{
                                                         <h3 class="font-bold text-lg">AM</h3>
                                                         <For each={amSchedules}>
                                                             {(schedule) => (
-                                                                <ScheduleEntry schedule={schedule} 
-                                                                    onMouseEnter={() => setSelectedSchedule(schedule)} 
-                                                                    onMouseLeave={() => setSelectedSchedule({})} />
+                                                                <ScheduleEntry schedule={schedule} />
                                                             )}
                                                         </For>
                                                     </Show>
@@ -111,9 +214,7 @@ export const SchedulesOverview: Component<{
                                                         <h3 class="font-bold text-lg">PM</h3>
                                                         <For each={pmSchedules}>
                                                             {(schedule) => (
-                                                                <ScheduleEntry schedule={schedule} 
-                                                                    onMouseEnter={() => setSelectedSchedule(schedule)} 
-                                                                    onMouseLeave={() => setSelectedSchedule({})} />
+                                                                <ScheduleEntry schedule={schedule} />
                                                             )}
                                                         </For>
                                                     </Show>
@@ -126,6 +227,18 @@ export const SchedulesOverview: Component<{
                         </>
                     ))}
             </tbody>
+            <ContextMenu handleDelete={handleScheduleDelete} handleEdit={() => setIsTimeSlotModalOpen(true)} />
+            <EditTimeSlotModal isModalOpen={isTimeSlotModalOpen} closeModal={() => setIsTimeSlotModalOpen(false)} getStateFn={() => ({
+                scheduleId: selectedSchedule.scheduleId,
+                userId: selectedSchedule.userId,
+                role: selectedSchedule.role,
+                day: selectedSchedule.day,
+                clockIn: selectedSchedule.clockIn,
+                clockOut: selectedSchedule.clockOut
+            })}
+            handleUpdate={(data: UpdateScheduleRequestData) => {handleScheduleEdit(data); setIsTimeSlotModalOpen(false)}}
+            handleDelete={(_: number) => {handleScheduleDelete(); setIsTimeSlotModalOpen(false)}}/>
+
         </table>
     );
 };
@@ -164,8 +277,6 @@ const ScheduleDroppable: Component<ScheduleDroppableProps> = (props) => {
 
             // Only proceed if the day or role has changed
             if (prevDay !== newDay || prevRole !== newRole) {
-                console.log("updating schedule");
-                
                 updateExistingSchedule({ scheduleId, day: newDay, role: newRole, clockIn, clockOut }, navigate);
 
                 const newSchedules = allSchedules.map(schedule => 
@@ -191,14 +302,11 @@ const ScheduleDroppable: Component<ScheduleDroppableProps> = (props) => {
 
 const ScheduleEntry: Component<{
     schedule: Schedule;
-    onMouseEnter: () => void;
-    onMouseLeave: () => void;
 }> = (props) => {
     return (
-        <div class="p-2 flex ol w-full draggable outline-solid outline-white print-outline-dark flex-justify-between"
-        onMouseEnter={() => props.onMouseEnter()}
-        onMouseLeave={() => props.onMouseLeave()}
+        <div class="p-2 flex ol w-full draggable outline-solid outline-white print-outline-dark flex-justify-between open-context-menu"
         data-scheduleid={props.schedule.scheduleId}
+        data-userid={props.schedule.userId}
         data-role={props.schedule.role}
         data-day={props.schedule.day}
         data-clockin={props.schedule.clockIn}
