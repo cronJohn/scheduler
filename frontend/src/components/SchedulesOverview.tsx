@@ -1,7 +1,7 @@
 import { Component, For, JSXElement, Show, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import { itd, mtr } from "../utils/conv";
 import { UpdateScheduleRequestData, deleteExistingSchedule, fetchAllSchedules, updateExistingSchedule } from "../utils/api";
-import { getDateISO, getDateWithOffset } from "../utils/helper";
+import { getDateISO, getDateWithOffset, setUpKeybindings } from "../utils/helper";
 import { useNavigate } from "@solidjs/router";
 import { createStore, produce } from "solid-js/store";
 import { Schedule } from "../utils/types";

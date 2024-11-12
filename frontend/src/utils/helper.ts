@@ -96,3 +96,16 @@ export function getColorFromString(
     // Return the hex color code
     return `#${f(0)}${f(8)}${f(4)}` || defaultColor;
 }
+
+export function setUpKeybindings(keybindings: { [key: string]: () => void }, excludeAreas: string[] = []) {
+    document.addEventListener('keydown', (event) => {
+        if (excludeAreas.some(area => event.target instanceof HTMLElement && event.target.closest(area))) {
+            return;
+        }
+
+        const key = event.key.toLowerCase();
+        if (keybindings[key]) {
+            keybindings[key]();
+        }
+    });
+}

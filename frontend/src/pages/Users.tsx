@@ -4,6 +4,7 @@ import { NavBar } from '../components/NavBar';
 import { useNavigate } from '@solidjs/router';
 import { AddUserModal } from '../components/modals/AddUserModal';
 import { User } from '../utils/types';
+import { setUpKeybindings } from '../utils/helper';
 
 const Users: Component = () => {
     const navigate = useNavigate();
@@ -14,25 +15,13 @@ const Users: Component = () => {
     const shortcuts: {
         [key: string]: () => void;
     }= {
-        "a" : () => setIsAddUserModalOpen(true),
+        "a" : () => setTimeout(() => {setIsAddUserModalOpen(true)}, 100), // Wait for user to let go of a key
         "r" : () => resetRowValue(entryIndex() || 0),
         "d" : () => handleDelete(getRowValue(entryIndex())?.userId || "")
     }
 
-    const handleKeyboardEvent = (event: KeyboardEvent) => {
-        const target = event.target as HTMLInputElement;
-        
-        // Ignore keyboard shortcuts for inputs and textareas
-        if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") { return; }
-
-        if (shortcuts[event.key]) {
-            event.preventDefault();
-            shortcuts[event.key]();
-        }
-    }
-
-    onMount(() =>   {document.addEventListener("keydown", handleKeyboardEvent);})
-    onCleanup(() => {document.removeEventListener("keydown", handleKeyboardEvent);})
+    onMount(() => {setUpKeybindings(shortcuts, ["INPUT", "TEXTAREA"])})
+    onCleanup(() => {document.removeEventListener("keydown", () => {})})
 
     const getRowValue = (index: number | undefined): User | null => {
         if (index === undefined || index === null) return null;

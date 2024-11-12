@@ -1,10 +1,11 @@
 import Modal from "@lutaok/solid-modal";
-import { Component, createEffect } from "solid-js";
+import { Component, createEffect, onMount } from "solid-js";
 import { fmtMT } from '../../utils/conv';
 import { createStore } from "solid-js/store";
 import { UpdateScheduleRequestData } from "../../utils/api";
 import { Schedule } from "../../utils/types";
 import { SelectRole } from "../SelectRole";
+import { setUpKeybindings } from "../../utils/helper";
 
 export const EditTimeSlotModal: Component<{
     isModalOpen: () => boolean;
@@ -32,6 +33,17 @@ export const EditTimeSlotModal: Component<{
             clockOut: props.getStateFn().clockOut,
         });
     });
+
+    const shortcuts: {
+        [key: string]: () => void;
+    }= {
+        "s" : () => props.handleUpdate(state),
+        "d" : () => props.handleDelete(state.scheduleId),
+    }
+
+    onMount(() => {
+        setUpKeybindings(shortcuts)
+    })
 
     return (
         <Modal

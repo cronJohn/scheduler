@@ -1,4 +1,4 @@
-import { For, Show, createResource, createSignal, type Component } from 'solid-js';
+import { For, Show, createResource, createSignal, onMount, type Component } from 'solid-js';
 import { fetchUserSchedules, updateExistingSchedule, deleteExistingSchedule, createNewSchedule, CreateNewScheduleRequestData, UpdateScheduleRequestData, shiftSchedules, deleteExistingSchedules } from '../utils/api';
 import { fmtDate, itd } from '../utils/conv';
 import { TimeSlot } from '../components/TimeSlot';
@@ -7,7 +7,7 @@ import { EditTimeSlotModal } from '../components/modals/EditTimeSlotModal';
 import { SelectUser } from '../components/SelectUser';
 import { AddEntryModal } from '../components/modals/AddEntryModal';
 import { DaySchedule, Schedule } from '../utils/types';
-import { displayCurrentOrPrevWeek, getDateISO, groupSchedulesByWeek } from '../utils/helper';
+import { displayCurrentOrPrevWeek, getDateISO, groupSchedulesByWeek, setUpKeybindings } from '../utils/helper';
 import { NavBar } from '../components/NavBar';
 import { useNavigate } from '@solidjs/router';
 
@@ -27,6 +27,14 @@ const Admin: Component = () => {
         clockIn: "11:00",
         clockOut: "12:00",
     });
+
+    const shortcuts: {
+        [key: string]: () => void;
+    }= {
+        "a" : () => setTimeout(() => {setIsAddEntryModalOpen(true)}, 50),
+    }
+
+    onMount(() => {setUpKeybindings(shortcuts)})
 
     const [schedules, { refetch }] = createResource(() => currentSchedule.userId, fetchUserSchedules);
 
