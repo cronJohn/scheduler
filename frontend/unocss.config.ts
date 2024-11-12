@@ -28,6 +28,9 @@ export default defineConfig({
         ['sw', { // section width
             'width': '100%',
         }],
+        ['rt', {
+            'font-size': 'clamp(1rem, 1.5vw + 1rem, 2rem)'
+        }],
         ["ol", { // outline
             'outline-width': '0.5px',
         }],
@@ -73,6 +76,7 @@ export default defineConfig({
             md: '768px',
             lg: '1024px',
             xl: '1280px',
+            otherSm: '560px',
             maxSm: '967px',
         },
     }
