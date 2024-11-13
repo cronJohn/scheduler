@@ -104,7 +104,7 @@ export const AddEntryModal: Component<{
                     {/* Select role input */}
                     <section class="flex justify-between items-center sw">
                         <label for="role-select" class="font-code ">Select role</label>
-                        <SelectRole defaultVal={props.getStateFn().role} setFn={(value: string) => setState("role", value)} />
+                        <SelectRole defaultVal={state.role} setFn={(value: string) => setState("role", value)} />
                     </section>
                     
                     <button
