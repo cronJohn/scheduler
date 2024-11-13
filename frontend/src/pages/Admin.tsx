@@ -10,12 +10,14 @@ import { DaySchedule, Schedule } from '../utils/types';
 import { displayCurrentOrPrevWeek, getDateISO, groupSchedulesByWeek, setUpKeybindings } from '../utils/helper';
 import { NavBar } from '../components/NavBar';
 import { useNavigate } from '@solidjs/router';
+import { AdminOptionsModal } from '../components/modals/AdminOptionsModal';
 
 const Admin: Component = () => {
     const navigate = useNavigate();
 
     const [isTimeSlotModalOpen, setIsTimeSlotModalOpen] = createSignal<boolean>(false);
     const [isAddEntryModalOpen, setIsAddEntryModalOpen] = createSignal<boolean>(false);
+    const [isAdminOptionsModalOpen, setIsAdminOptionsModalOpen] = createSignal<boolean>(false);
 
     const [weekSelectionId, setWeekSelectionId] = createSignal<string>("");
 
@@ -171,7 +173,9 @@ const Admin: Component = () => {
                 <SelectUser setFn={(input: string) => setCurrentSchedule("userId", input)} />
 
                 <button class='bg-dark color-light bb-primary px-4 py-2 rounded text-lg bt' onClick={() => setIsAddEntryModalOpen(true)}>Add entry</button>
+                <button class='bg-dark color-light bb-primary px-4 py-2 rounded text-lg bt' onClick={() => setIsAdminOptionsModalOpen(true)}>Utils</button>
             </div>
+
 
             <Show when={currentSchedule.userId && schedules()}>
                 <For each={Object.entries(groupSchedulesByWeek(schedules() || []))}>
@@ -233,6 +237,8 @@ const Admin: Component = () => {
             getStateFn={() => currentSchedule}
             targetUser={currentSchedule.userId ?? ""}
             handleAdd={(data: CreateNewScheduleRequestData) => handleAddNewSchedule(data)}/>
+
+            <AdminOptionsModal isModalOpen={isAdminOptionsModalOpen} closeModal={() => setIsAdminOptionsModalOpen(false)} refetchFn={refetch}/>
         </>
     );
 };

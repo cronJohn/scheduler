@@ -318,3 +318,59 @@ func (h *Handler) ShiftSchedule(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 }
+
+func (h *Handler) ShiftAllSchedules(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	shiftAmount := r.PathValue("amount")
+
+	if shiftAmount == "" {
+		log.Error().Msg("Shift amount is empty")
+		http.Error(w, "Shift amount is empty", http.StatusBadRequest)
+	}
+
+	err := h.db.ShiftAllSchedules(ctx, shiftAmount)
+	if err != nil {
+		log.Error().Msgf("Failed to shift all schedules: %v", err)
+		http.Error(w, "Failed to shift schedule", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *Handler) DeleteAllSchedulesBefore(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	beforeDate := r.PathValue("date")
+
+	if beforeDate == "" {
+		log.Error().Msg("Before date is empty")
+		http.Error(w, "Before date is empty", http.StatusBadRequest)
+	}
+
+	err := h.db.DeleteAllSchedulesBefore(ctx, beforeDate)
+	if err != nil {
+		log.Error().Msgf("Failed to delete all schedules before: %v", err)
+		http.Error(w, "Failed to delete all schedules before", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *Handler) DeleteAllSchedules(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	err := h.db.DeleteAllSchedules(ctx)
+	if err != nil {
+		log.Error().Msgf("Failed to nuke db: %v", err)
+		http.Error(w, "Failed to nuke db", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}

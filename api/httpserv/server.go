@@ -71,6 +71,17 @@ func (s *Server) Start() error {
 		middleware.Auth(middleware.Log(handlers.DeleteUserSchedules)),
 	)
 	s.mux.HandleFunc("PATCH /api/v1/schedules/shift", middleware.Auth(middleware.Log(handlers.ShiftSchedule)))
+	s.mux.HandleFunc("PUT /api/v1/schedules/shift/{amount}", middleware.Auth(middleware.Log(handlers.ShiftAllSchedules)))
+
+	s.mux.HandleFunc(
+		"DELETE /api/v1/users/schedules/before/{date}",
+		middleware.Auth(middleware.Log(handlers.DeleteAllSchedulesBefore)),
+	)
+
+	s.mux.HandleFunc(
+		"DELETE /api/v1/users/schedules/nuke",
+		middleware.Auth(middleware.Log(handlers.DeleteAllSchedules)),
+	)
 
 	// Catch-all route
 	s.mux.HandleFunc("/", middleware.Log(func(w http.ResponseWriter, r *http.Request) {

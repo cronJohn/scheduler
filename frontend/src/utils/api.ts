@@ -186,6 +186,21 @@ export const deleteExistingSchedules = async (scheduleId: number[], nav: Navigat
     handleResponse(response, nav);
 }
 
+export const deleteSchedulesBefore = async (beforeDate: string, nav: NavigateFunction) => {
+    const response = await fetch(`${config.frontend.URI}/api/v1/users/schedules/before/${beforeDate}`, {
+        method: 'DELETE',
+    })
+
+    handleResponse(response, nav)
+}
+
+export const deleteAllSchedules = async (nav: NavigateFunction) => {
+    const response = await fetch(`${config.frontend.URI}/api/v1/users/schedules/nuke`, {
+        method: 'DELETE',
+    })
+
+    handleResponse(response, nav)
+}
 
 export type ScheduleShiftData = {
     scheduleIdList: number[];
@@ -203,3 +218,12 @@ export const shiftSchedules = async (data: ScheduleShiftData, nav: NavigateFunct
 
     handleResponse(response, nav)
 }
+
+export const shiftAllSchedules = async (shiftAmount: string, nav: NavigateFunction) => {
+    const response = await fetch(`${config.frontend.URI}/api/v1/schedules/shift/${shiftAmount}`, {
+        method: 'PUT',
+    })
+
+    handleResponse(response, nav)
+}
+

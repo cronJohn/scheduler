@@ -46,3 +46,16 @@ SET
 WHERE 
     schedule_id IN (?);
 
+
+-- name: ShiftAllSchedules :exec
+UPDATE schedules
+SET 
+    day = DATE(day, ?);
+
+-- name: DeleteAllSchedulesBefore :exec
+DELETE FROM schedules
+WHERE day < ?;
+
+-- name: DeleteAllSchedules :exec
+DELETE FROM schedules;
+
