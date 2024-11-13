@@ -34,7 +34,7 @@ const Admin: Component = () => {
         "a" : () => setTimeout(() => {setIsAddEntryModalOpen(true)}, 50),
     }
 
-    onMount(() => {setUpKeybindings(shortcuts)})
+    onMount(() => {setUpKeybindings(shortcuts, ["INPUT", "TEXTAREA"])})
 
     const [schedules, { refetch }] = createResource(() => currentSchedule.userId, fetchUserSchedules);
 
