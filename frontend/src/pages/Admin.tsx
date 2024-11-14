@@ -33,7 +33,7 @@ const Admin: Component = () => {
     const shortcuts: {
         [key: string]: () => void;
     }= {
-        "a" : () => setTimeout(() => {setIsAddEntryModalOpen(true)}, 50),
+        "a" : () => setTimeout(() => {setIsAddEntryModalOpen(true)}, 0),
     }
 
     onMount(() => {setUpKeybindings(shortcuts, ["INPUT", "TEXTAREA"])})

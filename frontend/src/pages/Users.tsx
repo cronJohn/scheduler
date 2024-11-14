@@ -15,7 +15,7 @@ const Users: Component = () => {
     const shortcuts: {
         [key: string]: () => void;
     }= {
-        "a" : () => setTimeout(() => {setIsAddUserModalOpen(true)}, 100), // Wait for user to let go of a key
+        "a" : () => setTimeout(() => {setIsAddUserModalOpen(true)}, 0), // Wait for user to let go of a key
         "r" : () => resetRowValue(entryIndex() || 0),
         "d" : () => handleDelete(getRowValue(entryIndex())?.userId || "")
     }

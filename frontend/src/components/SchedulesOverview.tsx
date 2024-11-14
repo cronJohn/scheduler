@@ -1,13 +1,14 @@
 import { Component, For, JSXElement, Show, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import { itd, mtr } from "../utils/conv";
-import { UpdateScheduleRequestData, deleteExistingSchedule, fetchAllSchedules, updateExistingSchedule } from "../utils/api";
-import { getDateISO, getDateWithOffset } from "../utils/helper";
+import { CreateNewScheduleRequestData, UpdateScheduleRequestData, createNewSchedule, deleteExistingSchedule, fetchAllSchedules, updateExistingSchedule } from "../utils/api";
+import { getDateISO, getDateWithOffset, setUpKeybindings } from "../utils/helper";
 import { useNavigate } from "@solidjs/router";
 import { createStore, produce } from "solid-js/store";
 import { Schedule } from "../utils/types";
 import Sortable from 'sortablejs';
 import config from "../../../config.json";
 import { EditTimeSlotModal } from "./modals/EditTimeSlotModal";
+import { AddEntryModal } from "./modals/AddEntryModal";
 
 const [allSchedules, setAllSchedules] = createStore<Schedule[]>([]);
 
@@ -117,10 +118,14 @@ export const SchedulesOverview: Component<{
         setAllSchedules(schedules);
     }
 
-    const [isTimeSlotModalOpen, setIsTimeSlotModalOpen] = createSignal<boolean>(false);
+    const [isEditTimeSlotModalOpen, setIsEditTimeSlotModalOpen] = createSignal<boolean>(false);
+    const [isAddEntryModalOpen, setIsAddEntryModalOpen] = createSignal<boolean>(false);
 
     onMount(() => {
         fetchNewSchedules();
+        setUpKeybindings({"a": () => {setTimeout(() => {
+            setIsAddEntryModalOpen(true)
+        }, 0)}}, ["INPUT", "TEXTAREA"]);
     });
 
     createEffect(() => {
@@ -162,6 +167,12 @@ export const SchedulesOverview: Component<{
         ));
     }
 
+    const handleScheduleAdd = async (data: CreateNewScheduleRequestData) => {
+        await createNewSchedule(data, navigate);
+
+        fetchNewSchedules();
+    }
+
     return (
         <table class="w-full text-center text-light print-text-dark font-norm bg-white border-collapse">
             <thead>
@@ -198,6 +209,7 @@ export const SchedulesOverview: Component<{
 
                                         return (
                                             <td class="ol p-0 outline-solid outline-white print-outline-dark bg-dark print-bg-white"
+                                            onMouseEnter={() => setSelectedSchedule(produce(state => {state.day = date; state.role = role}))}
                                             data-day={date}
                                             data-role={role}>
                                                 <ScheduleDroppable>
@@ -227,8 +239,8 @@ export const SchedulesOverview: Component<{
                         </>
                     ))}
             </tbody>
-            <ContextMenu handleDelete={handleScheduleDelete} handleEdit={() => setIsTimeSlotModalOpen(true)} />
-            <EditTimeSlotModal isModalOpen={isTimeSlotModalOpen} closeModal={() => setIsTimeSlotModalOpen(false)} getStateFn={() => ({
+            <ContextMenu handleDelete={handleScheduleDelete} handleEdit={() => setIsEditTimeSlotModalOpen(true)} />
+            <EditTimeSlotModal isModalOpen={isEditTimeSlotModalOpen} closeModal={() => setIsEditTimeSlotModalOpen(false)} getStateFn={() => ({
                 scheduleId: selectedSchedule.scheduleId,
                 userId: selectedSchedule.userId,
                 role: selectedSchedule.role,
@@ -236,8 +248,22 @@ export const SchedulesOverview: Component<{
                 clockIn: selectedSchedule.clockIn,
                 clockOut: selectedSchedule.clockOut
             })}
-            handleUpdate={(data: UpdateScheduleRequestData) => {handleScheduleEdit(data); setIsTimeSlotModalOpen(false)}}
-            handleDelete={(_: number) => {handleScheduleDelete(); setIsTimeSlotModalOpen(false)}}/>
+            handleUpdate={(data: UpdateScheduleRequestData) => {handleScheduleEdit(data); setIsEditTimeSlotModalOpen(false)}}
+            handleDelete={(_: number) => {handleScheduleDelete(); setIsEditTimeSlotModalOpen(false)}}/>
+
+
+            {/* Put in Show component so initial state gets reset */}
+            <Show when={isAddEntryModalOpen()}>
+                <AddEntryModal isModalOpen={() => isAddEntryModalOpen()} closeModal={() => setIsAddEntryModalOpen(false)}
+                getStateFn={() => ({
+                    userId: "",
+                    role: selectedSchedule.role,
+                    day: selectedSchedule.day,
+                    clockIn: "11:00",
+                    clockOut: "12:00",
+                })} 
+                targetUser="" handleAdd={(data: CreateNewScheduleRequestData) => {handleScheduleAdd(data); setIsAddEntryModalOpen(false)}}/>
+            </Show>
 
         </table>
     );
